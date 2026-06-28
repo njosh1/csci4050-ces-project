@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 
 const ticketPrices = {
   adult: 14.99,
@@ -80,6 +81,14 @@ export default function BookingPage() {
             </div>
           </div>
         </section>
+        
+        {/*Back to search button*/}
+        <Link 
+          href="/search"
+          className="inline-flex items-center gap-2 rounded-full border border-white/20 by-white/10 px-4 py-2 text-white transmission hov er:bg-white/20"
+          >
+            ⏮️ Back to Search
+          </Link>
 
         {/* Main Interface Split */}
         <div className="booking-layout">
@@ -217,14 +226,14 @@ export default function BookingPage() {
         {/* Trust Badges and Security Block Footer */}
         <footer className="booking-footer">
           <div className="footer-card">
-            <span className="footer-icon">🔒</span>
+            <span className="footer-icon">🎬</span>
             <div>
-              <strong>End-to-End Encryption</strong>
-              <p>Your booking flow is guarded with 256-bit secure SSL protocols.</p>
+              <strong>Now Showing</strong>
+              <p>Discover the latest releases on the big screen</p>
             </div>
           </div>
           <div className="footer-card">
-            <span className="footer-icon">⚡</span>
+            <span className="footer-icon">⚡️</span>
             <div>
               <strong>Instant Digital Delivery</strong>
               <p>Your tickets will instantly populate inside your digital dashboard.</p>
