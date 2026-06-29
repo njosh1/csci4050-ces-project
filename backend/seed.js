@@ -86,6 +86,21 @@ const movies = [
     showtimes: hardcodedShowtimes,
   },
   {
+    title: "Deadpool & Wolverine",
+    description:
+      "Deadpool is offered a place in the Marvel Cinematic Universe by the TVA, but instead recruits a variant Wolverine to help save his world from extinction.",
+    genre: ["Action", "Comedy", "Superhero"],
+    rating: "R",
+    status: "Currently Running",
+    posterUrl: "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
+    trailerUrl: "https://www.youtube.com/embed/73_1biulkYk",
+    releaseYear: 2024,
+    director: "Shawn Levy",
+    cast: ["Ryan Reynolds", "Hugh Jackman", "Emma Corrin"],
+    duration: 128,
+    showtimes: hardcodedShowtimes,
+  },
+  {
     title: "Alien: Romulus",
     description:
       "A group of young space colonizers come face to face with the most terrifying life form in the universe.",
