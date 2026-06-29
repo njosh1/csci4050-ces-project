@@ -2,7 +2,6 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import Link from "next/link";
 
 const ticketPrices = {
   adult: 14.99,
@@ -55,7 +54,7 @@ export default function BookingPage() {
     <main className="booking-page">
       <div className="booking-container">
         <header className="booking-header">
-          <span className="ticket-badge">🎟️ SECURE TICKETING</span>
+          <span className="ticket-badge"> SECURE TICKETING</span>
           <h1 className="gradient-title">Book Your Tickets</h1>
           <p className="subtitle">Select your ticket categories and reserve your preferred seating layout below</p>
         </header>
@@ -70,25 +69,17 @@ export default function BookingPage() {
             <h2>{movie}</h2>
             <div className="movie-meta-grid">
               <div className="meta-item">
-                <span className="meta-label">📅 SHOWTIME</span>
+                <span className="meta-label">SHOWTIME</span>
                 <strong className="meta-value">{showtime}</strong>
               </div>
 
               <div className="meta-item">
-                <span className="meta-label">📍 AUDITORIUM</span>
+                <span className="meta-label"> AUDITORIUM</span>
                 <strong className="meta-value">Screen 1 (Laser Ultra)</strong>
               </div>
             </div>
           </div>
         </section>
-        
-        {/*Back to search button*/}
-        <Link 
-          href="/search"
-          className="inline-flex items-center gap-2 rounded-full border border-white/20 by-white/10 px-4 py-2 text-white transmission hov er:bg-white/20"
-          >
-            ⏮️ Back to Search
-          </Link>
 
         {/* Main Interface Split */}
         <div className="booking-layout">
@@ -122,7 +113,7 @@ export default function BookingPage() {
               <div className="ticket-item">
                 <div>
                   <strong className="ticket-type-title">Child</strong>
-                  <p className="ticket-desc">Ages 3–12. Under 3 are free</p>
+                  <p className="ticket-desc">Ages 3–12</p>
                 </div>
                 <span className="ticket-price">${ticketPrices.child.toFixed(2)}</span>
                 <div className="quantity-control">
@@ -136,7 +127,7 @@ export default function BookingPage() {
               <div className="ticket-item">
                 <div>
                   <strong className="ticket-type-title">Senior</strong>
-                  <p className="ticket-desc">Ages 65+ with valid identity verification</p>
+                  <p className="ticket-desc">Ages 65+</p>
                 </div>
                 <span className="ticket-price">${ticketPrices.senior.toFixed(2)}</span>
                 <div className="quantity-control">
@@ -217,7 +208,7 @@ export default function BookingPage() {
             </div>
 
             <div className="tip-box">
-              <span className="tip-icon">💡</span>
+              <span className="tip-icon"></span>
               <p className="tip-text">Click on available seats to assign or remove them from your current selection block.</p>
             </div>
           </section>
@@ -226,24 +217,21 @@ export default function BookingPage() {
         {/* Trust Badges and Security Block Footer */}
         <footer className="booking-footer">
           <div className="footer-card">
-            <span className="footer-icon">🎬</span>
+            <span className="footer-icon"></span>
             <div>
-              <strong>Now Showing</strong>
-              <p>Discover the latest releases on the big screen</p>
+              <strong>End-to-End Encryption</strong>
             </div>
           </div>
           <div className="footer-card">
-            <span className="footer-icon">⚡️</span>
+            <span className="footer-icon"></span>
             <div>
               <strong>Instant Digital Delivery</strong>
-              <p>Your tickets will instantly populate inside your digital dashboard.</p>
             </div>
           </div>
           <div className="footer-card">
-            <span className="footer-icon">💬</span>
+            <span className="footer-icon"></span>
             <div>
               <strong>Dedicated Concierge Support</strong>
-              <p>Experiencing booking friction? Contact customer care 24/7.</p>
             </div>
           </div>
         </footer>
