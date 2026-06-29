@@ -54,7 +54,7 @@ export default function BookingPage() {
     <main className="booking-page">
       <div className="booking-container">
         <header className="booking-header">
-          <span className="ticket-badge"> SECURE TICKETING</span>
+          <span className="ticket-badge">SECURE TICKETING</span>
           <h1 className="gradient-title">Book Your Tickets</h1>
           <p className="subtitle">Select your ticket categories and reserve your preferred seating layout below</p>
         </header>
@@ -74,7 +74,7 @@ export default function BookingPage() {
               </div>
 
               <div className="meta-item">
-                <span className="meta-label"> AUDITORIUM</span>
+                <span className="meta-label">AUDITORIUM</span>
                 <strong className="meta-value">Screen 1 (Laser Ultra)</strong>
               </div>
             </div>
@@ -208,8 +208,7 @@ export default function BookingPage() {
             </div>
 
             <div className="tip-box">
-              <span className="tip-icon"></span>
-              <p className="tip-text">Click on available seats to assign or remove them from your current selection block.</p>
+              <p className="tip-text">Click on available seats to assign or remove them from your selection.</p>
             </div>
           </section>
         </div>
@@ -217,22 +216,13 @@ export default function BookingPage() {
         {/* Trust Badges and Security Block Footer */}
         <footer className="booking-footer">
           <div className="footer-card">
-            <span className="footer-icon"></span>
-            <div>
-              <strong>End-to-End Encryption</strong>
-            </div>
+            <strong>Secure Booking</strong>
           </div>
           <div className="footer-card">
-            <span className="footer-icon"></span>
-            <div>
-              <strong>Instant Digital Delivery</strong>
-            </div>
+            <strong>Instant Digital Delivery</strong>
           </div>
           <div className="footer-card">
-            <span className="footer-icon"></span>
-            <div>
-              <strong>Dedicated Concierge Support</strong>
-            </div>
+            <strong>Customer Support</strong>
           </div>
         </footer>
       </div>

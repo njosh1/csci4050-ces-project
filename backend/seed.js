@@ -181,13 +181,13 @@ const movies = [
 async function seedDatabase() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("✅ Connected to MongoDB Atlas");
+    console.log("Connected to MongoDB Atlas");
 
     const deleted = await Movie.deleteMany({});
-    console.log(`🗑  Cleared ${deleted.deletedCount} existing movie(s).`);
+    console.log(`Cleared ${deleted.deletedCount} existing movie(s).`);
 
     const inserted = await Movie.insertMany(movies);
-    console.log(`🎬 Seeded ${inserted.length} movies successfully!\n`);
+    console.log(`Seeded ${inserted.length} movies successfully.\n`);
 
     const running = inserted.filter((m) => m.status === "Currently Running").length;
     const coming = inserted.filter((m) => m.status === "Coming Soon").length;
@@ -196,10 +196,10 @@ async function seedDatabase() {
     console.log(`   Coming Soon       : ${coming}`);
     console.log(`   Genres covered    : ${genres.join(", ")}`);
   } catch (err) {
-    console.error("❌ Seeding failed:", err);
+    console.error("Seeding failed:", err);
   } finally {
     await mongoose.disconnect();
-    console.log("\n🔌 Disconnected from MongoDB.");
+    console.log("Disconnected from MongoDB.");
   }
 }
 

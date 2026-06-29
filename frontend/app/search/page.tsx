@@ -14,7 +14,7 @@ type Movie = {
   trailerUrl: string;
 };
 
-const API_URL = "http://localhost:5050";
+const API_URL = "http://localhost:5001";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");

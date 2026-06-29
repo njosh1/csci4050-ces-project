@@ -21,7 +21,7 @@ type Movie = {
   showtimes: Showtime[];
 };
 
-const API_URL = "http://localhost:5050";
+const API_URL = "http://localhost:5001";
 
 export default function MovieDetailsPage() {
   const params = useParams();
