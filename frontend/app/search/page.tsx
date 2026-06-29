@@ -20,6 +20,8 @@ export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState<Movie[]>([]);
   const [searched, setSearched] = useState(false);
+  const [selectedGenre, setSelectedGenre] = useState("All");
+  const [showDate, setShowDate] = useState("");
 
   async function handleSearch() {
     setSearched(true);
@@ -31,6 +33,13 @@ export default function SearchPage() {
     const data = await response.json();
     setMovies(data);
   }
+
+  const filteredMovies =
+  selectedGenre === "All"
+    ? movies
+    : movies.filter((movie) =>
+        movie.genre.includes(selectedGenre)
+      );
 
   return (
     <main className="min-h-screen bg-gray-100 p-8 text-black">
@@ -60,7 +69,7 @@ export default function SearchPage() {
             Search
           </button>
         </div>
-
+        
         {searched && movies.length === 0 && (
           <p className="text-gray-600">No movies found.</p>
         )}

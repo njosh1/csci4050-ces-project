@@ -52,28 +52,41 @@ export default function Home() {
       <div className="mx-auto max-w-7xl">
         <h1 className="text-4xl font-bold">Cinema E-Booking System</h1>
 
-        <div className="my-6 flex gap-4">
+        <div className="my-6 flex flex-wrap items-center gap-4">
           <Link href="/search" className="rounded bg-black px-4 py-2 text-white">
             Search Movies
           </Link>
 
-          <select
-            className="rounded border px-4 py-2"
-            value={genre}
-            onChange={(e) => setGenre(e.target.value)}
-          >
-            <option>All</option>
-            <option>Action</option>
-            <option>Adventure</option>
-            <option>Animation</option>
-            <option>Comedy</option>
-            <option>Drama</option>
-            <option>Family</option>
-            <option>Sci-Fi</option>
-            <option>Thriller</option>
-          </select>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">Filter by Genre:</span>
+            <select
+              className="rounded border px-4 py-2"
+              value={genre}
+              onChange={(e) => setGenre(e.target.value)}
+              >
+              <option>All</option>
+              <option>Action</option>
+              <option>Adventure</option>
+              <option>Animation</option>
+              <option>Comedy</option>
+              <option>Drama</option>
+              <option>Family</option>
+              <option>Sci-Fi</option>
+              <option>Thriller</option>
+            </select>
+          </div>
+           <div className="flex items-center gap-2">
+              <span className="font-semibold">Filter by Show Date:</span>
+              <input
+                type="date"
+                className="rounded border px-4 py-2"
+              />
+           </div>
         </div>
 
+        {movies.length === 0 && (
+          <p className="mb-6 text-gray-600">No movies match this filter.</p>
+        )}
         <MovieSection title="Currently Running" movies={currentlyRunning} />
         <MovieSection title="Coming Soon" movies={comingSoon} />
       </div>
