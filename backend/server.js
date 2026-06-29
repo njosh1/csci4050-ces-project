@@ -18,6 +18,7 @@ app.get("/", (req, res) => {
   res.send("CES Backend is running!");
 });
 
+// Get all movies
 app.get("/api/movies", async (req, res) => {
   try {
     const movies = await Movie.find().sort({ title: 1 });
@@ -27,21 +28,14 @@ app.get("/api/movies", async (req, res) => {
   }
 });
 
+// Search movies by title
 app.get("/api/movies/search", async (req, res) => {
   try {
-    const query = (req.query.q || "").trim();
-
-    if (!query) {
-      return res.json([]);
-    }
-
-    const words = query.split(/\s+/);
+    const query = req.query.q || "";
 
     const movies = await Movie.find({
-      $and: words.map((word) => ({
-        title: { $regex: word, $options: "i" },
-      })),
-    }).sort({ title: 1 });
+      title: { $regex: query, $options: "i" },
+    });
 
     res.json(movies);
   } catch (err) {
@@ -49,18 +43,19 @@ app.get("/api/movies/search", async (req, res) => {
   }
 });
 
+// Filter movies by genre
 app.get("/api/movies/filter", async (req, res) => {
   try {
     const genre = req.query.genre;
 
     if (!genre || genre === "All") {
-      const movies = await Movie.find().sort({ title: 1 });
+      const movies = await Movie.find();
       return res.json(movies);
     }
 
     const movies = await Movie.find({
       genre: { $in: [genre] },
-    }).sort({ title: 1 });
+    });
 
     res.json(movies);
   } catch (err) {
@@ -68,6 +63,7 @@ app.get("/api/movies/filter", async (req, res) => {
   }
 });
 
+// Get one movie by id
 app.get("/api/movies/:id", async (req, res) => {
   try {
     const movie = await Movie.findById(req.params.id);
@@ -82,8 +78,8 @@ app.get("/api/movies/:id", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5050;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
