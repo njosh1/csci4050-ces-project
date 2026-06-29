@@ -50,7 +50,8 @@ export default function SearchPage() {
 
         <h1 className="mb-4 text-3xl font-bold">Search Movies</h1>
 
-        <div className="mb-6 flex gap-2">
+        {/* Search bar */}
+        <div className="mb-4 flex gap-2">
           <input
             className="w-full rounded border px-3 py-2 text-black"
             type="text"
@@ -69,13 +70,36 @@ export default function SearchPage() {
             Search
           </button>
         </div>
-        
-        {searched && movies.length === 0 && (
+
+        {/* Genre filter — applied client-side on top of the search results */}
+        {searched && movies.length > 0 && (
+          <div className="mb-6 flex items-center gap-2">
+            <label className="text-sm font-semibold text-gray-700">Filter by Genre:</label>
+            <select
+              value={selectedGenre}
+              onChange={(e) => setSelectedGenre(e.target.value)}
+              className="rounded border px-3 py-1.5 text-black text-sm"
+            >
+              <option>All</option>
+              <option>Action</option>
+              <option>Adventure</option>
+              <option>Animation</option>
+              <option>Comedy</option>
+              <option>Drama</option>
+              <option>Family</option>
+              <option>Sci-Fi</option>
+              <option>Thriller</option>
+            </select>
+          </div>
+        )}
+
+        {searched && filteredMovies.length === 0 && (
           <p className="text-gray-600">No movies found.</p>
         )}
 
         <div className="grid gap-4">
-          {movies.map((movie) => (
+          {/* Render filteredMovies so the genre dropdown actually affects results */}
+          {filteredMovies.map((movie) => (
             <Link
               key={movie._id}
               href={`/movies/${movie._id}`}
