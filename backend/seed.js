@@ -93,7 +93,7 @@ const movies = [
     rating: "R",
     status: "Currently Running",
     posterUrl: "https://image.tmdb.org/t/p/w500/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg",
-    trailerUrl: "https://www.youtube.com/embed/x0XDEhP4MQs",
+    trailerUrl: "https://www.youtube.com/embed/OzY2r2JXsDM",
     releaseYear: 2024,
     director: "Fede Álvarez",
     cast: ["Cailee Spaeny", "David Jonsson", "Archie Renaux"],
