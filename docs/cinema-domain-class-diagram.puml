@@ -1,2 +1,198 @@
+@startuml
+title Cinema E-Booking System - Domain Class Diagram
 
+enum CustomerState {
+  Active
+  Inactive
+  Suspended
+}
 
+enum TicketType {
+  Adult
+  Senior
+  Child
+}
+
+class User {
+  - userId: int
+  - firstName: String
+  - lastName: String
+  - email: String
+  - password: String
+  + login()
+  + logout()
+  + updateProfile()
+}
+
+class Customer {
+  - state: CustomerState
+  + register()
+  + browseMovies()
+  + searchMovies()
+  + manageFavorites()
+  + bookTickets()
+  + cancelBooking()
+  + viewRecommendations()
+}
+
+class Admin {
+  + addMovie()
+  + updateMovie()
+  + deleteMovie()
+  + scheduleShow()
+  + managePromotions()
+}
+
+User <|-- Customer
+User <|-- Admin
+
+class PaymentCard {
+  - cardNumber: String
+  - billingAddress: String
+  - expirationDate: Date
+  + validateCard()
+}
+
+class Address {
+  - street: String
+  - city: String
+  - state: String
+  - zipCode: String
+  + updateAddress()
+}
+
+Customer "1" *-- "0..3" PaymentCard : stores
+Customer "1" o-- "0..1" Address : has
+
+class Movie {
+  - movieId: int
+  - title: String
+  - genre: String
+  - rating: String
+  - cast: String
+  - director: String
+  - synopsis: String
+  - releaseDate: Date
+  + viewDetails()
+  + checkAvailability()
+}
+
+class FavoriteMovie {
+  - dateAdded: Date
+  + addFavorite()
+  + removeFavorite()
+}
+
+class MoviePreference {
+  - preferenceId: int
+  - preferredGenre: String
+  - preferredRating: String
+  - preferredActor: String
+  - preferredShowtime: String
+  + updatePreferences()
+  + matchMovie(movie: Movie)
+}
+
+class BookingActivity {
+  - activityId: int
+  - activityDate: Date
+  - movieGenre: String
+  - ticketType: TicketType
+  + recordActivity()
+  + analyzeBookingHistory()
+}
+
+class MovieRecommendation {
+  - recommendationId: int
+  - reason: String
+  - score: double
+  - dateGenerated: Date
+  + generateFromPreferences()
+  + generateFromBookingActivity()
+  + rankRecommendation()
+}
+
+Customer "1" -- "0..*" FavoriteMovie : maintains
+FavoriteMovie "*" -- "1" Movie : references
+
+Customer "1" -- "0..*" MoviePreference : sets
+Customer "1" -- "0..*" BookingActivity : creates
+BookingActivity "*" -- "1" Movie : based on
+Customer "1" -- "0..*" MovieRecommendation : receives
+MovieRecommendation "*" -- "1" Movie : recommends
+MovieRecommendation "*" ..> MoviePreference : uses
+MovieRecommendation "*" ..> BookingActivity : uses
+
+class Theatre {
+  - theatreId: int
+  - name: String
+  - location: String
+  + viewShowrooms()
+}
+
+class Showroom {
+  - showroomId: int
+  - showroomNumber: int
+  - seatCapacity: int
+  + getAvailableSeats()
+}
+
+class Seat {
+  - seatId: int
+  - rowNumber: String
+  - seatNumber: int
+  + reserveSeat()
+  + releaseSeat()
+}
+
+Theatre "1" *-- "1..*" Showroom : contains
+Showroom "1" *-- "1..*" Seat : contains
+
+class Show {
+  - showId: int
+  - showDate: Date
+  - showTime: Time
+  - duration: int
+  + scheduleShow()
+  + updateShow()
+  + cancelShow()
+}
+
+class Booking {
+  - bookingId: int
+  - bookingDate: Date
+  - totalAmount: double
+  + createBooking()
+  + calculateTotal()
+  + applyPromotion()
+  + cancelBooking()
+}
+
+class Ticket {
+  - ticketId: int
+  - ticketType: TicketType
+  - price: double
+  + calculatePrice()
+  + assignSeat()
+}
+
+class Promotion {
+  - promotionId: int
+  - promoCode: String
+  - discountAmount: double
+  - expirationDate: Date
+  + validatePromotion()
+  + applyDiscount()
+}
+
+Showroom "1" -- "0..*" Show : schedules
+Movie "1" -- "0..*" Show : shown in
+
+Customer "1" -- "0..*" Booking : makes
+Booking "1" *-- "1..*" Ticket : includes
+Ticket "1" -- "1" Seat : assigned to
+Ticket "1" -- "1" Show : for
+
+Booking "0..*" -- "0..1" Promotion : uses
+
+@enduml
