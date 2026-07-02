@@ -54,10 +54,10 @@ export default function MovieDetailsPage() {
           <img
             src={movie.posterUrl}
             alt={movie.title}
-	onError={(e) => {
-	    e.currentTarget.src =
-	      "https://placehold.co/500x750?text=Movie+Poster";
-	  }}
+             onError={(e) => {
+             e.currentTarget.src =
+              "https://placehold.co/500x750?text=Movie+Poster";
+             }}
             className="w-full rounded"
           />
 

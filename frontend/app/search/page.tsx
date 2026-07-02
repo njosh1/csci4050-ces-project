@@ -6,56 +6,47 @@ import { useState } from "react";
 type Movie = {
   _id: string;
   title: string;
-  description: string;
   genre: string[];
   rating: string;
-  status: string;
   posterUrl: string;
-  trailerUrl: string;
+  status: string;
 };
-
-const API_URL = "http://localhost:5001";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState<Movie[]>([]);
   const [searched, setSearched] = useState(false);
-  const [selectedGenre, setSelectedGenre] = useState("All");
-  const [showDate, setShowDate] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSearch() {
+    setLoading(true);
     setSearched(true);
 
     const response = await fetch(
-      `${API_URL}/api/movies/search?q=${encodeURIComponent(query.trim())}`
+      `http://localhost:5050/api/movies/search?q=${encodeURIComponent(query)}`
     );
 
     const data = await response.json();
-    setMovies(data);
-  }
 
-  const filteredMovies =
-  selectedGenre === "All"
-    ? movies
-    : movies.filter((movie) =>
-        movie.genre.includes(selectedGenre)
-      );
+    setMovies(data);
+    setLoading(false);
+  }
 
   return (
     <main className="min-h-screen bg-gray-100 p-8 text-black">
-      <section className="mx-auto max-w-4xl rounded bg-white p-8 shadow">
+      <section className="mx-auto max-w-4xl rounded-lg bg-white p-8 shadow">
         <Link href="/" className="mb-6 inline-block text-blue-600">
-          ← Back Home
+          ← Back to Home
         </Link>
 
-        <h1 className="mb-4 text-3xl font-bold">Search Movies</h1>
+        <h1 className="mb-2 text-3xl font-bold">Search Movies</h1>
+        <p className="mb-6 text-gray-600">Search for movies by title.</p>
 
-        {/* Search bar */}
-        <div className="mb-4 flex gap-2">
+        <div className="mb-6 flex gap-2">
           <input
-            className="w-full rounded border px-3 py-2 text-black"
+            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-black"
             type="text"
-            placeholder="Search movie title..."
+            placeholder="Enter movie title..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -71,56 +62,33 @@ export default function SearchPage() {
           </button>
         </div>
 
-        {/* Genre filter — applied client-side on top of the search results */}
-        {searched && movies.length > 0 && (
-          <div className="mb-6 flex items-center gap-2">
-            <label className="text-sm font-semibold text-gray-700">Filter by Genre:</label>
-            <select
-              value={selectedGenre}
-              onChange={(e) => setSelectedGenre(e.target.value)}
-              className="rounded border px-3 py-1.5 text-black text-sm"
-            >
-              <option>All</option>
-              <option>Action</option>
-              <option>Adventure</option>
-              <option>Animation</option>
-              <option>Comedy</option>
-              <option>Drama</option>
-              <option>Family</option>
-              <option>Sci-Fi</option>
-              <option>Thriller</option>
-            </select>
-          </div>
-        )}
+        {loading && <p>Searching...</p>}
 
-        {searched && filteredMovies.length === 0 && (
-          <p className="text-gray-600">No movies found.</p>
+        {!loading && searched && movies.length === 0 && (
+          <p>No movies found.</p>
         )}
 
         <div className="grid gap-4">
-          {/* Render filteredMovies so the genre dropdown actually affects results */}
-          {filteredMovies.map((movie) => (
+          {movies.map((movie) => (
             <Link
-              key={movie._id}
               href={`/movies/${movie._id}`}
-              className="flex gap-4 rounded border p-4 hover:bg-gray-50"
+              key={movie._id}
+              className="flex gap-4 rounded border border-gray-300 p-4 hover:bg-gray-50"
             >
               <img
                 src={movie.posterUrl}
                 alt={movie.title}
-		onError={(e) => {
-		    e.currentTarget.src =
-	      "https://placehold.co/500x750?text=Movie+Poster";
-	  }}
+                 onError={(e) => {
+                    e.currentTarget.src =
+                      "https://placehold.co/500x750?text=Movie+Poster";
+           }}
                 className="h-32 w-24 rounded object-cover"
               />
 
               <div>
-                <h2 className="text-xl font-bold">{movie.title}</h2>
-                <p className="text-sm text-gray-600">
-                  {movie.genre.join(", ")}
-                </p>
-                <p className="text-sm font-semibold">{movie.rating}</p>
+                <h2 className="text-xl font-semibold">{movie.title}</h2>
+                <p className="text-gray-600">{movie.genre.join(", ")}</p>
+                <p className="text-sm">{movie.rating}</p>
                 <p className="text-sm text-blue-600">{movie.status}</p>
               </div>
             </Link>
