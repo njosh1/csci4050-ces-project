@@ -1,6 +1,9 @@
 @startuml
 title Cinema E-Booking System - Domain Class Diagram
 
+left to right direction
+skinparam linetype ortho
+
 enum CustomerState {
   Active
   Inactive
@@ -75,6 +78,7 @@ class Movie {
   - releaseDate: Date
   + viewDetails()
   + checkAvailability()
+  + getShowtimes()
 }
 
 class FavoriteMovie {
@@ -82,6 +86,9 @@ class FavoriteMovie {
   + addFavorite()
   + removeFavorite()
 }
+
+Customer "1" -- "0..*" FavoriteMovie : maintains
+FavoriteMovie "*" -- "1" Movie : references
 
 class MoviePreference {
   - preferenceId: int
@@ -112,13 +119,11 @@ class MovieRecommendation {
   + rankRecommendation()
 }
 
-Customer "1" -- "0..*" FavoriteMovie : maintains
-FavoriteMovie "*" -- "1" Movie : references
-
 Customer "1" -- "0..*" MoviePreference : sets
 Customer "1" -- "0..*" BookingActivity : creates
-BookingActivity "*" -- "1" Movie : based on
 Customer "1" -- "0..*" MovieRecommendation : receives
+
+BookingActivity "*" -- "1" Movie : based on
 MovieRecommendation "*" -- "1" Movie : recommends
 MovieRecommendation "*" ..> MoviePreference : uses
 MovieRecommendation "*" ..> BookingActivity : uses
@@ -158,6 +163,9 @@ class Show {
   + cancelShow()
 }
 
+Movie "1" -- "0..*" Show : shown in
+Showroom "1" -- "0..*" Show : schedules
+
 class Booking {
   - bookingId: int
   - bookingDate: Date
@@ -185,14 +193,10 @@ class Promotion {
   + applyDiscount()
 }
 
-Showroom "1" -- "0..*" Show : schedules
-Movie "1" -- "0..*" Show : shown in
-
 Customer "1" -- "0..*" Booking : makes
 Booking "1" *-- "1..*" Ticket : includes
-Ticket "1" -- "1" Seat : assigned to
 Ticket "1" -- "1" Show : for
-
-Booking "0..*" -- "0..1" Promotion : uses
+Ticket "1" -- "1" Seat : assigned to
+Booking "1" --> "0..1" Promotion : uses
 
 @enduml
