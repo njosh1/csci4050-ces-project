@@ -79,6 +79,9 @@ class Movie {
   + viewDetails()
   + checkAvailability()
   + getShowtimes()
+  + searchByTitle(title: String)
+  + filterByGenre(genre: String)
+  + filterByShowDate(date: Date)
 }
 
 class FavoriteMovie {
