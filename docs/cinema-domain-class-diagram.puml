@@ -51,7 +51,6 @@ User <|-- Admin
 
 class PaymentCard {
   - cardNumber: String
-  - billingAddress: String
   - expirationDate: Date
   + validateCard()
 }
@@ -65,7 +64,8 @@ class Address {
 }
 
 Customer "1" *-- "0..3" PaymentCard : stores
-Customer "1" o-- "0..1" Address : has
+Customer "1" o-- "0..1" Address : mailing address
+PaymentCard "1" *-- "1" Address : billing address
 
 class Movie {
   - movieId: int
@@ -84,14 +84,16 @@ class Movie {
   + filterByShowDate(date: Date)
 }
 
+' modeled as an association class since a favorite is really
+' a link between one customer and one movie, plus the date added
 class FavoriteMovie {
   - dateAdded: Date
   + addFavorite()
   + removeFavorite()
 }
 
-Customer "1" -- "0..*" FavoriteMovie : maintains
-FavoriteMovie "*" -- "1" Movie : references
+Customer "1" -- "0..*" Movie : favorites
+(Customer, Movie) .. FavoriteMovie
 
 class MoviePreference {
   - preferenceId: int
@@ -124,10 +126,14 @@ class MovieRecommendation {
 
 Customer "1" -- "0..*" MoviePreference : sets
 Customer "1" -- "0..*" BookingActivity : creates
-Customer "1" -- "0..*" MovieRecommendation : receives
 
 BookingActivity "*" -- "1" Movie : based on
-MovieRecommendation "*" -- "1" Movie : recommends
+
+' recommendation also modeled as an association class, tying one
+' customer's recommendation to one specific movie
+Customer "1" -- "0..*" Movie : recommends
+(Customer, Movie) .. MovieRecommendation
+
 MovieRecommendation "*" ..> MoviePreference : uses
 MovieRecommendation "*" ..> BookingActivity : uses
 
@@ -197,9 +203,15 @@ class Promotion {
 }
 
 Customer "1" -- "0..*" Booking : makes
+' all tickets in a booking share one showtime, so the show
+' belongs to the booking rather than to each individual ticket
+Booking "1" -- "1" Show : for
 Booking "1" *-- "1..*" Ticket : includes
-Ticket "1" -- "1" Show : for
 Ticket "1" -- "1" Seat : assigned to
 Booking "1" --> "0..1" Promotion : uses
+
+Admin ..> Movie : manages
+Admin ..> Show : schedules
+Admin ..> Promotion : manages
 
 @enduml
