@@ -3,11 +3,22 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const Movie = require("./models/movieModel");
+const profileRoutes = require("./routes/profileRoutes");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/profile", profileRoutes);
+
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  return res.status(500).json({
+    message:
+      "An unexpected server error occurred.",
+  });
+});
 
 mongoose
   .connect(process.env.MONGO_URI)
@@ -82,5 +93,5 @@ app.get("/api/movies/:id", async (req, res) => {
 const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+console.log('Server running on port ${PORT}');
 });
