@@ -41,7 +41,6 @@ If you did not make this change, please contact support immediately.
 
 Cinema E-Booking System`;
 
-
   if (!transporter) {
     console.log("=======================================");
     console.log("PROFILE EMAIL NOTIFICATION PREVIEW");
@@ -70,6 +69,57 @@ Cinema E-Booking System`;
   };
 }
 
+/*
+ * Registration email used for Sprint 2 account verification.
+ */
+async function sendVerificationEmail(user, verificationUrl) {
+  const transporter = createTransporter();
+
+  const subject = "Verify your Cinema E-Booking account";
+
+  const text = `Hello ${user.firstName},
+
+Thank you for registering with Cinema E-Booking.
+
+Please verify your account by opening this link:
+
+${verificationUrl}
+
+This verification link expires in 24 hours.
+
+If you did not create this account, you can ignore this email.
+
+Cinema E-Booking System`;
+
+  if (!transporter) {
+    console.log("=======================================");
+    console.log("ACCOUNT VERIFICATION EMAIL PREVIEW");
+    console.log(`To: ${user.email}`);
+    console.log(`Subject: ${subject}`);
+    console.log(text);
+    console.log("=======================================");
+
+    return {
+      preview: true,
+    };
+  }
+
+  await transporter.sendMail({
+    from:
+      process.env.EMAIL_FROM ||
+      process.env.SMTP_USER,
+
+    to: user.email,
+    subject,
+    text,
+  });
+
+  return {
+    preview: false,
+  };
+}
+
 module.exports = {
   sendProfileChangedEmail,
+  sendVerificationEmail,
 };

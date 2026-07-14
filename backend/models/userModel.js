@@ -87,6 +87,16 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    verificationToken: {
+      type: String,
+      select: false,
+    },
+
+    verificationTokenExpires: {
+      type: Date,
+      select: false,
+    },
+
     /*
      * Storing the address as one embedded object naturally enforces
      * the Sprint 2 rule that a customer can only have one address.

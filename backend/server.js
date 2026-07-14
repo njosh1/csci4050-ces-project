@@ -4,12 +4,14 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const Movie = require("./models/movieModel");
 const profileRoutes = require("./routes/profileRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/profile", profileRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);
@@ -93,5 +95,5 @@ app.get("/api/movies/:id", async (req, res) => {
 const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
-console.log('Server running on port ${PORT}');
+  console.log(`Server running on port ${PORT}`);
 });

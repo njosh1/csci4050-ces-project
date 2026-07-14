@@ -233,14 +233,22 @@ export default function HomePage() {
           <span className="text-xl font-extrabold text-white tracking-tight">
             CineBook
           </span>
-          <div className="flex items-center gap-6 text-sm font-medium text-slate-400">
-            <Link href="/" className="text-white">
-              Home
-            </Link>
-            <Link href="/search" className="hover:text-white transition-colors">
-              Search
-            </Link>
-          </div>
+<div className="flex items-center gap-6 text-sm font-medium text-slate-400">
+  <Link href="/" className="text-white">
+    Home
+  </Link>
+
+  <Link href="/search" className="hover:text-white transition-colors">
+    Search
+  </Link>
+
+  <Link
+    href="/register"
+    className="rounded-lg bg-sky-500 px-4 py-2 font-semibold text-white transition hover:bg-sky-400"
+  >
+    Sign Up
+  </Link>
+</div>
         </div>
       </nav>
 
