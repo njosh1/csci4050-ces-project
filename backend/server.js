@@ -5,6 +5,7 @@ const cors = require("cors");
 const Movie = require("./models/movieModel");
 const profileRoutes = require("./routes/profileRoutes");
 const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/profile", profileRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);

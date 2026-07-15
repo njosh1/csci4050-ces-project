@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+import { AuthUser, clearAuth, getStoredUser } from "@/lib/auth";
 
 // --------------------------------------------------------------------------
 // Types
@@ -183,10 +186,23 @@ function SectionHeader({ title, count }: { title: string; count: number }) {
 // --------------------------------------------------------------------------
 
 export default function HomePage() {
+  const router = useRouter();
+
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [genre, setGenre] = useState("All");
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    setUser(getStoredUser());
+  }, []);
+
+  function handleLogout() {
+    clearAuth();
+    setUser(null);
+    router.push("/");
+  }
 
   useEffect(() => {
     async function fetchMovies() {
@@ -242,12 +258,43 @@ export default function HomePage() {
     Search
   </Link>
 
-  <Link
-    href="/register"
-    className="rounded-lg bg-sky-500 px-4 py-2 font-semibold text-white transition hover:bg-sky-400"
-  >
-    Sign Up
-  </Link>
+  {user ? (
+    <>
+      {user.role === "Admin" && (
+        <Link
+          href="/admin"
+          className="hover:text-white transition-colors"
+        >
+          Admin Portal
+        </Link>
+      )}
+
+      <span className="text-slate-500">
+        Hi, {user.firstName}
+      </span>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="rounded-lg border border-white/10 px-4 py-2 font-semibold text-white transition hover:bg-white/10"
+      >
+        Log Out
+      </button>
+    </>
+  ) : (
+    <>
+      <Link href="/login" className="hover:text-white transition-colors">
+        Log In
+      </Link>
+
+      <Link
+        href="/register"
+        className="rounded-lg bg-sky-500 px-4 py-2 font-semibold text-white transition hover:bg-sky-400"
+      >
+        Sign Up
+      </Link>
+    </>
+  )}
 </div>
         </div>
       </nav>
