@@ -3,9 +3,16 @@ const bcrypt = require("bcryptjs");
 
 const requireUser = require("../middleware/requireUser");
 const User = require("../models/userModel");
+const Movie = require("../models/movieModel");
 const {
   sendProfileChangedEmail,
 } = require("../services/emailService");
+const {
+  encryptCardNumber,
+  lastFourDigits,
+} = require("../utils/cardEncryption");
+
+const MAX_PAYMENT_CARDS = 3;
 
 const router = express.Router();
 
@@ -13,6 +20,17 @@ const router = express.Router();
  * Every route below requires an authenticated, active customer.
  */
 router.use(requireUser);
+
+function maskedCard(card) {
+  return {
+    id: card._id,
+    cardholderName: card.cardholderName || "",
+    lastFourDigits: card.lastFourDigits,
+    expirationMonth: card.expirationMonth,
+    expirationYear: card.expirationYear,
+    billingZip: card.billingZip,
+  };
+}
 
 function publicProfile(user) {
   return {
@@ -23,6 +41,8 @@ function publicProfile(user) {
     phone: user.phone || "",
     promotionOptIn: Boolean(user.promotionOptIn),
     address: user.address || null,
+    paymentCards: (user.paymentCards || []).map(maskedCard),
+    favoriteCount: (user.favorites || []).length,
   };
 }
 
@@ -392,5 +412,208 @@ router.put(
     }
   }
 );
+
+function validateCard(body) {
+  const cardholderName = clean(body.cardholderName);
+  const cardNumber = clean(body.cardNumber).replace(/\s+/g, "");
+  const expirationMonth = Number(body.expirationMonth);
+  const expirationYear = Number(body.expirationYear);
+  const billingZip = clean(body.billingZip);
+
+  if (!cardholderName) {
+    return { error: "Cardholder name is required." };
+  }
+
+  if (!/^\d{13,19}$/.test(cardNumber)) {
+    return {
+      error: "Card number must be 13-19 digits.",
+    };
+  }
+
+  if (
+    !Number.isInteger(expirationMonth) ||
+    expirationMonth < 1 ||
+    expirationMonth > 12
+  ) {
+    return { error: "Enter a valid expiration month (1-12)." };
+  }
+
+  if (!Number.isInteger(expirationYear) || expirationYear < 1000) {
+    return { error: "Enter a valid expiration year." };
+  }
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  if (
+    expirationYear < currentYear ||
+    (expirationYear === currentYear && expirationMonth < currentMonth)
+  ) {
+    return { error: "This card has already expired." };
+  }
+
+  if (!/^\d{5}(?:-\d{4})?$/.test(billingZip)) {
+    return { error: "Enter a valid billing ZIP code." };
+  }
+
+  return {
+    cardholderName,
+    cardNumber,
+    expirationMonth,
+    expirationYear,
+    billingZip,
+  };
+}
+
+/*
+ * POST /api/profile/cards
+ *
+ * Adds a payment card. Capped at 3 per customer — enforced here since
+ * a Mongoose array length can't be capped at the schema level.
+ * The raw card number is never stored: it is encrypted immediately
+ * and only the last 4 digits are kept in plaintext for display.
+ */
+router.post("/cards", async (req, res, next) => {
+  try {
+    if ((req.user.paymentCards || []).length >= MAX_PAYMENT_CARDS) {
+      return res.status(409).json({
+        message: `Only ${MAX_PAYMENT_CARDS} payment cards may be stored. Delete a card before adding a new one.`,
+      });
+    }
+
+    const result = validateCard(req.body);
+
+    if (result.error) {
+      return res.status(400).json({ message: result.error });
+    }
+
+    req.user.paymentCards.push({
+      cardholderName: result.cardholderName,
+      cardNumberEncrypted: encryptCardNumber(result.cardNumber),
+      lastFourDigits: lastFourDigits(result.cardNumber),
+      expirationMonth: result.expirationMonth,
+      expirationYear: result.expirationYear,
+      billingZip: result.billingZip,
+    });
+
+    await req.user.save();
+
+    await sendProfileChangedEmail(req.user, ["payment card added"]);
+
+    return res.status(201).json({
+      message: "Payment card added successfully.",
+      paymentCards: req.user.paymentCards.map(maskedCard),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/*
+ * DELETE /api/profile/cards/:cardId
+ */
+router.delete("/cards/:cardId", async (req, res, next) => {
+  try {
+    const card = req.user.paymentCards.id(req.params.cardId);
+
+    if (!card) {
+      return res.status(404).json({
+        message: "Payment card not found.",
+      });
+    }
+
+    card.deleteOne();
+
+    await req.user.save();
+
+    await sendProfileChangedEmail(req.user, ["payment card removed"]);
+
+    return res.json({
+      message: "Payment card removed successfully.",
+      paymentCards: req.user.paymentCards.map(maskedCard),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/*
+ * GET /api/profile/favorites
+ *
+ * Returns the customer's favorited movies with full movie details
+ * (not just ids), so the frontend can render a list directly.
+ */
+router.get("/favorites", async (req, res, next) => {
+  try {
+    const userWithFavorites = await User.findById(req.user._id).populate(
+      "favorites"
+    );
+
+    return res.json({
+      favorites: userWithFavorites.favorites,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/*
+ * POST /api/profile/favorites/:movieId
+ *
+ * Adds a movie to the customer's favorites. Idempotent: adding an
+ * already-favorited movie is not an error.
+ */
+router.post("/favorites/:movieId", async (req, res, next) => {
+  try {
+    const movie = await Movie.findById(req.params.movieId);
+
+    if (!movie) {
+      return res.status(404).json({
+        message: "Movie not found.",
+      });
+    }
+
+    const alreadyFavorited = req.user.favorites.some(
+      (id) => id.toString() === movie._id.toString()
+    );
+
+    if (!alreadyFavorited) {
+      req.user.favorites.push(movie._id);
+      await req.user.save();
+    }
+
+    return res.status(201).json({
+      message: "Added to favorites.",
+      favoriteCount: req.user.favorites.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/*
+ * DELETE /api/profile/favorites/:movieId
+ */
+router.delete("/favorites/:movieId", async (req, res, next) => {
+  try {
+    const before = req.user.favorites.length;
+
+    req.user.favorites = req.user.favorites.filter(
+      (id) => id.toString() !== req.params.movieId
+    );
+
+    if (req.user.favorites.length !== before) {
+      await req.user.save();
+    }
+
+    return res.json({
+      message: "Removed from favorites.",
+      favoriteCount: req.user.favorites.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;
