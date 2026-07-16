@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "seed": "node seed.js",
-    "seed:profile": "node seedProfileDemo.js"
+    "seed:profile": "node seedProfileDemo.js",
+    "seed:auth": "node seedAuthDemo.js"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +18,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.3",
     "nodemailer": "^9.0.3"
   }

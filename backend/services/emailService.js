@@ -119,7 +119,58 @@ Cinema E-Booking System`;
   };
 }
 
+/*
+ * Password reset email used for Sprint 2 login (forgot password flow).
+ */
+async function sendPasswordResetEmail(user, resetUrl) {
+  const transporter = createTransporter();
+
+  const subject = "Reset your Cinema E-Booking password";
+
+  const text = `Hello ${user.firstName},
+
+We received a request to reset your Cinema E-Booking password.
+
+Please reset your password by opening this link:
+
+${resetUrl}
+
+This reset link expires in 1 hour.
+
+If you did not request a password reset, you can ignore this email.
+
+Cinema E-Booking System`;
+
+  if (!transporter) {
+    console.log("=======================================");
+    console.log("PASSWORD RESET EMAIL PREVIEW");
+    console.log(`To: ${user.email}`);
+    console.log(`Subject: ${subject}`);
+    console.log(text);
+    console.log("=======================================");
+
+    return {
+      preview: true,
+    };
+  }
+
+  await transporter.sendMail({
+    from:
+      process.env.EMAIL_FROM ||
+      process.env.SMTP_USER,
+
+    to: user.email,
+    subject,
+    text,
+  });
+
+  return {
+    preview: false,
+  };
+}
+
 module.exports = {
   sendProfileChangedEmail,
   sendVerificationEmail,
+  sendPasswordResetEmail,
 };
