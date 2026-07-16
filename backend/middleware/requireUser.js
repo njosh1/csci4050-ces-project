@@ -2,34 +2,27 @@ const User = require("../models/userModel");
 const { verifyUserToken } = require("../utils/jwt");
 
 /*
- * Resolves the requesting user's email.
+ * Resolves the requesting user's email from a real
+ * "Authorization: Bearer <jwt>" header, issued by POST /api/auth/login.
  *
- * The preferred path is a real "Authorization: Bearer <jwt>" header,
- * issued by POST /api/auth/login. The "x-user-email"/DEMO_USER_EMAIL
- * bridge is kept as a fallback so existing Sprint 2 profile flows
- * (built before login existed) keep working without a token.
+ * bypass — anyone could impersonate any user, including an admin, by setting a header. 
  */
+
 function resolveEmail(req) {
   const authHeader = req.header("authorization") || "";
   const [scheme, token] = authHeader.split(" ");
 
-  if (scheme === "Bearer" && token) {
-    try {
-      const payload = verifyUserToken(token);
-
-      return String(payload.email || "").trim().toLowerCase();
-    } catch (error) {
-      return null;
-    }
+  if (scheme !== "Bearer" || !token) {
+    return null;
   }
 
-  return String(
-    req.header("x-user-email") ||
-      process.env.DEMO_USER_EMAIL ||
-      ""
-  )
-    .trim()
-    .toLowerCase();
+  try {
+    const payload = verifyUserToken(token);
+
+    return String(payload.email || "").trim().toLowerCase();
+  } catch (error) {
+    return null;
+  }
 }
 
 async function requireUser(req, res, next) {
