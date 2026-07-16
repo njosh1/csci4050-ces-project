@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
+import { authHeaders, getToken } from "@/lib/auth";
+
 type Showtime = {
   time: string;
   date: string;
@@ -22,6 +24,86 @@ type Movie = {
 };
 
 const API_URL = "http://localhost:5001";
+
+function FavoriteButton({ movieId }: { movieId: string }) {
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const loggedIn = Boolean(getToken());
+  // If the person isn't logged in, there's nothing to check — start
+  // "checked" immediately so we don't setState from inside the effect.
+  const [checked, setChecked] = useState(() => !loggedIn);
+
+  useEffect(() => {
+    if (!loggedIn) {
+      return;
+    }
+
+    async function checkFavorite() {
+      try {
+        const res = await fetch(`${API_URL}/api/profile/favorites`, {
+          headers: authHeaders(),
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const favorited = (data.favorites || []).some(
+          (m: { _id: string }) => m._id === movieId
+        );
+        setIsFavorite(favorited);
+      } finally {
+        setChecked(true);
+      }
+    }
+
+    checkFavorite();
+  }, [movieId, loggedIn]);
+
+  async function toggleFavorite() {
+    if (!loggedIn) {
+      window.location.href = "/login";
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `${API_URL}/api/profile/favorites/${movieId}`,
+        {
+          method: isFavorite ? "DELETE" : "POST",
+          headers: authHeaders(),
+        }
+      );
+
+      if (res.ok) {
+        setIsFavorite(!isFavorite);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!checked) return null;
+
+  return (
+    <button
+      onClick={toggleFavorite}
+      disabled={loading}
+      title={
+        loggedIn
+          ? isFavorite
+            ? "Remove from favorites"
+            : "Add to favorites"
+          : "Log in to save favorites"
+      }
+      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      className="ml-3 inline-flex items-center justify-center rounded-full border border-gray-300 p-2 text-xl transition hover:bg-gray-100 disabled:opacity-50"
+    >
+      <span aria-hidden="true">{isFavorite ? "❤️" : "🤍"}</span>
+    </button>
+  );
+}
 
 export default function MovieDetailsPage() {
   const params = useParams();
@@ -62,7 +144,10 @@ export default function MovieDetailsPage() {
           />
 
           <div>
-            <h1 className="text-4xl font-bold">{movie.title}</h1>
+            <div className="flex items-center">
+              <h1 className="text-4xl font-bold">{movie.title}</h1>
+              <FavoriteButton movieId={movie._id} />
+            </div>
             <p className="mt-2 font-semibold">{movie.rating}</p>
             <p className="mt-4">{movie.description}</p>
 

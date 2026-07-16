@@ -33,6 +33,54 @@ const addressSchema = new mongoose.Schema(
   }
 );
 
+const paymentCardSchema = new mongoose.Schema(
+  {
+    cardholderName: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+
+    /*
+     * Encrypted with backend/utils/cardEncryption.js (AES-256-GCM).
+     * select: false so a normal profile fetch never pulls this back —
+     * the app only ever needs the masked lastFourDigits for display.
+     */
+    cardNumberEncrypted: {
+      type: String,
+      required: true,
+      select: false,
+    },
+
+    lastFourDigits: {
+      type: String,
+      required: true,
+      match: /^\d{4}$/,
+    },
+
+    expirationMonth: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 12,
+    },
+
+    expirationYear: {
+      type: Number,
+      required: true,
+    },
+
+    billingZip: {
+      type: String,
+      required: true,
+      match: /^\d{5}(?:-\d{4})?$/,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -114,6 +162,26 @@ const userSchema = new mongoose.Schema(
     address: {
       type: addressSchema,
       default: undefined,
+    },
+
+    /*
+     * Capped at 3 by application logic in profileRoutes.js — Mongoose
+     * array length can't be enforced with a schema-level constraint
+     * the way SQL would need a trigger for the same rule.
+     */
+    paymentCards: {
+      type: [paymentCardSchema],
+      default: [],
+    },
+
+    favorites: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Movie",
+        },
+      ],
+      default: [],
     },
   },
   {

@@ -269,6 +269,10 @@ export default function HomePage() {
         </Link>
       )}
 
+      <Link href="/profile" className="hover:text-white transition-colors">
+        My Profile
+      </Link>
+
       <span className="text-slate-500">
         Hi, {user.firstName}
       </span>
