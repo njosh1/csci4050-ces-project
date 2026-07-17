@@ -98,9 +98,23 @@ function FavoriteButton({ movieId }: { movieId: string }) {
           : "Log in to save favorites"
       }
       aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-      className="ml-3 inline-flex items-center justify-center rounded-full border border-gray-300 p-2 text-xl transition hover:bg-gray-100 disabled:opacity-50"
+      className="ml-3 inline-flex items-center justify-center rounded-full border border-gray-300 p-2 transition hover:bg-gray-100 disabled:opacity-50"
     >
-      <span aria-hidden="true">{isFavorite ? "❤️" : "🤍"}</span>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        width="20"
+        height="20"
+        fill={isFavorite ? "#dc2626" : "none"}
+        stroke={isFavorite ? "#dc2626" : "currentColor"}
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 21s-7.5-4.6-10-9.3C.5 8.4 2.3 5 5.7 5c1.9 0 3.4 1 4.3 2.5C11 6 12.5 5 14.3 5c3.4 0 5.2 3.4 3.7 6.7C19.5 16.4 12 21 12 21z"
+        />
+      </svg>
     </button>
   );
 }

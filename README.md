@@ -34,7 +34,18 @@ Create a `.env` file inside `backend/`:
 ```
 MONGO_URI=<your MongoDB Atlas connection string>
 PORT=5001
+JWT_SECRET=<random string, used to sign login sessions>
+CARD_ENCRYPTION_KEY=<32-byte key, base64-encoded, used to encrypt stored payment cards>
 ```
+
+Generate `JWT_SECRET` and `CARD_ENCRYPTION_KEY` with:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"       # JWT_SECRET
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"    # CARD_ENCRYPTION_KEY
+```
+
+Without these, the server will fail to issue login sessions and payment card storage will error out.
 
 > **Mac users:** Port 5000 is taken by macOS AirPlay. Use 5001 (or any other free port) and make sure `PORT` in `.env` matches `API_URL` in the frontend files.
 
@@ -52,10 +63,16 @@ Connected to MongoDB Atlas
 
 ### 3. Seed the database
 
-Run this once to load all 11 movies into MongoDB:
+Load the movie catalog:
 
 ```bash
-node seed.js
+npm run seed
+```
+
+Load demo accounts used for the Sprint demo (admin, plain customer, a customer with 1 favorite movie, and a customer with 3 payment cards — all use password `Cinema!2026`):
+
+```bash
+npm run seed:auth
 ```
 
 ### 4. Frontend

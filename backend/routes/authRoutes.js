@@ -218,7 +218,7 @@ router.post("/login", async (req, res) => {
     if (user.status === "Inactive") {
       return res.status(403).json({
         message:
-          "Please verify your email before logging in. Check your inbox for the verification link.",
+          "Account is not verified. Please check your email to verify your account.",
         code: "ACCOUNT_UNVERIFIED",
       });
     }
