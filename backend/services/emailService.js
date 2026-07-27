@@ -169,8 +169,58 @@ Cinema E-Booking System`;
   };
 }
 
+/*
+ * Promotion announcement email — sent only to users who opted into
+ * promotional emails (see Sprint 3 bonus: admin promotions).
+ */
+async function sendPromotionEmail(user, promotion) {
+  const transporter = createTransporter();
+
+  const subject = `New promotion: ${promotion.promoCode}`;
+
+  const text = `Hello ${user.firstName},
+
+A new promotion is available at Cinema E-Booking:
+
+Code: ${promotion.promoCode}
+Discount: $${promotion.discountAmount.toFixed(2)}
+Expires: ${new Date(promotion.expirationDate).toLocaleDateString()}
+
+Use this code at checkout to redeem your discount.
+
+Cinema E-Booking System`;
+
+  if (!transporter) {
+    console.log("=======================================");
+    console.log("PROMOTION EMAIL PREVIEW");
+    console.log(`To: ${user.email}`);
+    console.log(`Subject: ${subject}`);
+    console.log(text);
+    console.log("=======================================");
+
+    return {
+      preview: true,
+    };
+  }
+
+  await transporter.sendMail({
+    from:
+      process.env.EMAIL_FROM ||
+      process.env.SMTP_USER,
+
+    to: user.email,
+    subject,
+    text,
+  });
+
+  return {
+    preview: false,
+  };
+}
+
 module.exports = {
   sendProfileChangedEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
+  sendPromotionEmail,
 };

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AuthUser, clearAuth, getStoredUser } from "@/lib/auth";
+import { formatShowtime } from "@/lib/format";
 
 // --------------------------------------------------------------------------
 // Types
@@ -153,7 +154,7 @@ function MovieCard({ movie }: { movie: Movie }) {
                     key={i}
                     className="px-2.5 py-1 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold"
                   >
-                    {showtime.time}
+                    {formatShowtime(showtime.time)}
                   </span>
                 ))}
               </div>

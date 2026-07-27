@@ -481,6 +481,94 @@ body {
   line-height: 1.4;
 }
 
+/* Back-to-movie link above the booking header */
+.back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: #38bdf8;
+}
+
+/* Inline error state, reused across the booking flow */
+.error-banner {
+  margin-bottom: 24px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  font-size: 14px;
+}
+
+/* Order summary + payment steps (single centered panel) */
+.checkout-panel {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.email-confirm {
+  margin-top: 28px;
+}
+
+.email-confirm label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.email-confirm input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
+  font-size: 14px;
+}
+
+.email-confirm input:focus {
+  outline: none;
+  border-color: #38bdf8;
+}
+
+.payment-mockup {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.payment-mockup label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.payment-mockup input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.4);
+  color: #64748b;
+}
+
+.payment-mockup-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
 /* Modern Responsive Overrides */
 @media (max-width: 960px) {
   .booking-layout,

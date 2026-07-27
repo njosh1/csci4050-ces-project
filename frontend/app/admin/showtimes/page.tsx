@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 
 import { API_URL, authHeaders } from "@/lib/auth";
+import { formatShowtime } from "@/lib/format";
 
 type Showtime = {
   _id: string;
@@ -296,7 +297,7 @@ export default function AdminShowtimesPage() {
                   >
                     <span className="text-sm text-slate-200">
                       {showtime.date} &middot;{" "}
-                      {showtime.time} &middot;{" "}
+                      {formatShowtime(showtime.time)} &middot;{" "}
                       {showtime.showroom ||
                         "No showroom assigned"}
                     </span>

@@ -1,15 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
 
 import { redirectPathForRole, storeAuth } from "@/lib/auth";
 
 const API_URL = "http://localhost:5001";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,7 +57,7 @@ export default function LoginPage() {
       }
 
       storeAuth(data.token, data.user);
-      router.push(redirectPathForRole(data.user.role));
+      router.push(redirectTo || redirectPathForRole(data.user.role));
     } catch (requestError) {
       setError(
         requestError instanceof Error

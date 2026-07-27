@@ -4,6 +4,7 @@ const requireAdmin = require("../middleware/requireAdmin");
 const Movie = require("../models/movieModel");
 const Promotion = require("../models/promotionModel");
 const User = require("../models/userModel");
+const { sendPromotionEmail } = require("../services/emailService");
 
 const router = express.Router();
 
@@ -277,6 +278,19 @@ router.post("/promotions", async (req, res, next) => {
       discountAmount,
       expirationDate,
     });
+
+    const subscribers = await User.find({
+      promotionOptIn: true,
+      status: "Active",
+    });
+
+    await Promise.all(
+      subscribers.map((subscriber) =>
+        sendPromotionEmail(subscriber, promotion).catch((emailError) =>
+          console.error("Promotion email error:", emailError)
+        )
+      )
+    );
 
     return res.status(201).json(promotion);
   } catch (error) {

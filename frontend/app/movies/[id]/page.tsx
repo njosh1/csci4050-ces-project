@@ -5,10 +5,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import { authHeaders, getToken } from "@/lib/auth";
+import { formatShowtime } from "@/lib/format";
 
 type Showtime = {
+  _id: string;
   time: string;
   date: string;
+  showroom: string;
 };
 
 type Movie = {
@@ -173,15 +176,13 @@ export default function MovieDetailsPage() {
 
             {movie.showtimes.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-3">
-                {movie.showtimes.map((showtime, index) => (
+                {movie.showtimes.map((showtime) => (
                   <Link
-                    key={index}
-                    href={`/booking?movie=${encodeURIComponent(
-                      movie.title
-                    )}&showtime=${encodeURIComponent(showtime.time)}`}
+                    key={showtime._id}
+                    href={`/booking?movieId=${movie._id}&showtimeId=${showtime._id}`}
                     className="rounded bg-black px-4 py-2 text-white"
                   >
-                    {showtime.date} at {showtime.time}
+                    {showtime.date} at {formatShowtime(showtime.time)} &middot; {showtime.showroom}
                   </Link>
                 ))}
               </div>

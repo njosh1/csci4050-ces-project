@@ -1,12 +1,15 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 const mongoose = require("mongoose");
 const Movie = require("./models/movieModel");
 
+// Times are stored in 24-hour "HH:MM" form to match the value produced by
+// the admin showtime form's <input type="time">, so seeded and admin-added
+// showtimes compare equal for scheduling-conflict checks.
 function createShowtimes(date, showroom) {
   return [
-     { time: "2:00 PM", date, showroom },
-     { time: "5:00 PM", date, showroom },
-     { time: "8:00 PM", date, showroom },
+     { time: "14:00", date, showroom },
+     { time: "17:00", date, showroom },
+     { time: "20:00", date, showroom },
   ];
 }
 
