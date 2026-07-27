@@ -24,7 +24,57 @@ router.use(requireAdmin);
 
 router.post("/movies", async (req, res, next) => {
   try {
-    const movie = await Movie.create(req.body);
+    const required = [
+      "title",
+      "description",
+      "rating",
+      "status",
+      "posterUrl",
+      "trailerUrl",
+    ];
+
+    const missing = required.filter(
+      (field) => !String(req.body[field] || "").trim()
+    );
+
+    const genre = Array.isArray(req.body.genre)
+      ? req.body.genre
+          .map((item) => String(item).trim())
+          .filter(Boolean)
+      : [];
+
+    if (missing.length || genre.length === 0) {
+      return res.status(400).json({
+        message:
+          "Title, description, genre, rating, status, poster URL, and trailer URL are required.",
+      });
+    }
+
+    const escapedTitle = String(req.body.title)
+      .trim()
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const duplicate = await Movie.findOne({
+      title: {
+        $regex: `^${escapedTitle}$`,
+        $options: "i",
+      },
+    });
+
+    if (duplicate) {
+      return res.status(409).json({
+        message: "A movie with this title already exists.",
+      });
+    }
+
+    const movie = await Movie.create({
+      ...req.body,
+      title: String(req.body.title).trim(),
+      description: String(req.body.description).trim(),
+      posterUrl: String(req.body.posterUrl).trim(),
+      trailerUrl: String(req.body.trailerUrl).trim(),
+      genre,
+    });
 
     return res.status(201).json(movie);
   } catch (error) {
@@ -37,7 +87,10 @@ router.put("/movies/:id", async (req, res, next) => {
     const movie = await Movie.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true }
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
     if (!movie) {
@@ -54,7 +107,9 @@ router.put("/movies/:id", async (req, res, next) => {
 
 router.delete("/movies/:id", async (req, res, next) => {
   try {
-    const movie = await Movie.findByIdAndDelete(req.params.id);
+    const movie = await Movie.findByIdAndDelete(
+      req.params.id
+    );
 
     if (!movie) {
       return res.status(404).json({
@@ -71,67 +126,83 @@ router.delete("/movies/:id", async (req, res, next) => {
 });
 
 /* ---------------------------------------------------------------- */
-/* Showtimes (embedded on Movie)                                     */
+/* Showtimes                                                         */
 /* ---------------------------------------------------------------- */
 
-router.post("/movies/:id/showtimes", async (req, res, next) => {
-  try {
-    const date = String(req.body.date || "").trim();
-    const time = String(req.body.time || "").trim();
-    const showroom = String(req.body.showroom || "").trim();
+router.post(
+  "/movies/:id/showtimes",
+  async (req, res, next) => {
+    try {
+      const date = String(req.body.date || "").trim();
+      const time = String(req.body.time || "").trim();
+      const showroom = String(
+        req.body.showroom || ""
+      ).trim();
 
-    if (!date || !time || !showroom) {
-      return res.status(400).json({
-        message:
-          "Showtime date, time, and showroom are required.",
-      });
-    }
+      if (!date || !time || !showroom) {
+        return res.status(400).json({
+          message:
+            "Showtime date, time, and showroom are required.",
+        });
+      }
 
-    if (!ALLOWED_SHOWROOMS.includes(showroom)) {
-      return res.status(400).json({
-        message:
-          "Showroom must be Showroom 1, Showroom 2, or Showroom 3.",
-      });
-    }
+      if (!ALLOWED_SHOWROOMS.includes(showroom)) {
+        return res.status(400).json({
+          message:
+            "Showroom must be Showroom 1, Showroom 2, or Showroom 3.",
+        });
+      }
 
-    const movie = await Movie.findById(req.params.id);
+      const showtimeDate = new Date(`${date}T${time}`);
 
-    if (!movie) {
-      return res.status(404).json({
-        message: "Movie not found.",
-      });
-    }
+      if (
+        Number.isNaN(showtimeDate.getTime()) ||
+        showtimeDate <= new Date()
+      ) {
+        return res.status(400).json({
+          message:
+            "Showtime must be a valid future date and time.",
+        });
+      }
 
-    const conflictingMovie = await Movie.findOne({
-      showtimes: {
-        $elemMatch: {
-          date,
-          time,
-          showroom,
+      const movie = await Movie.findById(req.params.id);
+
+      if (!movie) {
+        return res.status(404).json({
+          message: "Movie not found.",
+        });
+      }
+
+      const conflictingMovie = await Movie.findOne({
+        showtimes: {
+          $elemMatch: {
+            date,
+            time,
+            showroom,
+          },
         },
-      },
-    });
-
-    if (conflictingMovie) {
-      return res.status(409).json({
-        message:
-          `${showroom} is already scheduled on ${date} at ${time}.`,
       });
+
+      if (conflictingMovie) {
+        return res.status(409).json({
+          message: `${showroom} is already scheduled on ${date} at ${time}.`,
+        });
+      }
+
+      movie.showtimes.push({
+        date,
+        time,
+        showroom,
+      });
+
+      await movie.save();
+
+      return res.status(201).json(movie);
+    } catch (error) {
+      next(error);
     }
-
-    movie.showtimes.push({
-      date,
-      time,
-      showroom,
-    });
-
-    await movie.save();
-
-    return res.status(201).json(movie);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 router.delete(
   "/movies/:id/showtimes/:showtimeId",
@@ -156,6 +227,7 @@ router.delete(
       }
 
       showtime.deleteOne();
+
       await movie.save();
 
       return res.json(movie);
@@ -219,45 +291,56 @@ router.post("/promotions", async (req, res, next) => {
   }
 });
 
-router.put("/promotions/:id", async (req, res, next) => {
-  try {
-    const promotion = await Promotion.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+router.put(
+  "/promotions/:id",
+  async (req, res, next) => {
+    try {
+      const promotion =
+        await Promotion.findByIdAndUpdate(
+          req.params.id,
+          req.body,
+          {
+            new: true,
+            runValidators: true,
+          }
+        );
 
-    if (!promotion) {
-      return res.status(404).json({
-        message: "Promotion not found.",
-      });
+      if (!promotion) {
+        return res.status(404).json({
+          message: "Promotion not found.",
+        });
+      }
+
+      return res.json(promotion);
+    } catch (error) {
+      next(error);
     }
-
-    return res.json(promotion);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
-router.delete("/promotions/:id", async (req, res, next) => {
-  try {
-    const promotion = await Promotion.findByIdAndDelete(
-      req.params.id
-    );
+router.delete(
+  "/promotions/:id",
+  async (req, res, next) => {
+    try {
+      const promotion =
+        await Promotion.findByIdAndDelete(
+          req.params.id
+        );
 
-    if (!promotion) {
-      return res.status(404).json({
-        message: "Promotion not found.",
+      if (!promotion) {
+        return res.status(404).json({
+          message: "Promotion not found.",
+        });
+      }
+
+      return res.json({
+        message: "Promotion deleted.",
       });
+    } catch (error) {
+      next(error);
     }
-
-    return res.json({
-      message: "Promotion deleted.",
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /* ---------------------------------------------------------------- */
 /* Users                                                             */
@@ -284,40 +367,45 @@ router.get("/users", async (req, res, next) => {
   }
 });
 
-router.put("/users/:id/status", async (req, res, next) => {
-  try {
-    const { status } = req.body;
+router.put(
+  "/users/:id/status",
+  async (req, res, next) => {
+    try {
+      const { status } = req.body;
 
-    if (
-      !["Active", "Inactive", "Suspended"].includes(
-        status
-      )
-    ) {
-      return res.status(400).json({
-        message:
-          "Status must be Active, Inactive, or Suspended.",
+      if (
+        ![
+          "Active",
+          "Inactive",
+          "Suspended",
+        ].includes(status)
+      ) {
+        return res.status(400).json({
+          message:
+            "Status must be Active, Inactive, or Suspended.",
+        });
+      }
+
+      const user = await User.findByIdAndUpdate(
+        req.params.id,
+        { status },
+        { new: true }
+      );
+
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found.",
+        });
+      }
+
+      return res.json({
+        id: user._id,
+        status: user.status,
       });
+    } catch (error) {
+      next(error);
     }
-
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found.",
-      });
-    }
-
-    return res.json({
-      id: user._id,
-      status: user.status,
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 module.exports = router;
