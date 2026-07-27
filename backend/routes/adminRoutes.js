@@ -7,6 +7,12 @@ const User = require("../models/userModel");
 
 const router = express.Router();
 
+const ALLOWED_SHOWROOMS = [
+  "Showroom 1",
+  "Showroom 2",
+  "Showroom 3",
+];
+
 /*
  * Every route below requires an authenticated Admin.
  */
@@ -35,7 +41,9 @@ router.put("/movies/:id", async (req, res, next) => {
     );
 
     if (!movie) {
-      return res.status(404).json({ message: "Movie not found." });
+      return res.status(404).json({
+        message: "Movie not found.",
+      });
     }
 
     return res.json(movie);
@@ -49,10 +57,14 @@ router.delete("/movies/:id", async (req, res, next) => {
     const movie = await Movie.findByIdAndDelete(req.params.id);
 
     if (!movie) {
-      return res.status(404).json({ message: "Movie not found." });
+      return res.status(404).json({
+        message: "Movie not found.",
+      });
     }
 
-    return res.json({ message: "Movie deleted." });
+    return res.json({
+      message: "Movie deleted.",
+    });
   } catch (error) {
     next(error);
   }
@@ -64,21 +76,55 @@ router.delete("/movies/:id", async (req, res, next) => {
 
 router.post("/movies/:id/showtimes", async (req, res, next) => {
   try {
-    const { date, time } = req.body;
+    const date = String(req.body.date || "").trim();
+    const time = String(req.body.time || "").trim();
+    const showroom = String(req.body.showroom || "").trim();
 
-    if (!date || !time) {
+    if (!date || !time || !showroom) {
       return res.status(400).json({
-        message: "Showtime date and time are required.",
+        message:
+          "Showtime date, time, and showroom are required.",
+      });
+    }
+
+    if (!ALLOWED_SHOWROOMS.includes(showroom)) {
+      return res.status(400).json({
+        message:
+          "Showroom must be Showroom 1, Showroom 2, or Showroom 3.",
       });
     }
 
     const movie = await Movie.findById(req.params.id);
 
     if (!movie) {
-      return res.status(404).json({ message: "Movie not found." });
+      return res.status(404).json({
+        message: "Movie not found.",
+      });
     }
 
-    movie.showtimes.push({ date, time });
+    const conflictingMovie = await Movie.findOne({
+      showtimes: {
+        $elemMatch: {
+          date,
+          time,
+          showroom,
+        },
+      },
+    });
+
+    if (conflictingMovie) {
+      return res.status(409).json({
+        message:
+          `${showroom} is already scheduled on ${date} at ${time}.`,
+      });
+    }
+
+    movie.showtimes.push({
+      date,
+      time,
+      showroom,
+    });
+
     await movie.save();
 
     return res.status(201).json(movie);
@@ -94,10 +140,22 @@ router.delete(
       const movie = await Movie.findById(req.params.id);
 
       if (!movie) {
-        return res.status(404).json({ message: "Movie not found." });
+        return res.status(404).json({
+          message: "Movie not found.",
+        });
       }
 
-      movie.showtimes.id(req.params.showtimeId)?.deleteOne();
+      const showtime = movie.showtimes.id(
+        req.params.showtimeId
+      );
+
+      if (!showtime) {
+        return res.status(404).json({
+          message: "Showtime not found.",
+        });
+      }
+
+      showtime.deleteOne();
       await movie.save();
 
       return res.json(movie);
@@ -125,9 +183,17 @@ router.get("/promotions", async (req, res, next) => {
 
 router.post("/promotions", async (req, res, next) => {
   try {
-    const { promoCode, discountAmount, expirationDate } = req.body;
+    const {
+      promoCode,
+      discountAmount,
+      expirationDate,
+    } = req.body;
 
-    if (!promoCode || discountAmount == null || !expirationDate) {
+    if (
+      !promoCode ||
+      discountAmount == null ||
+      !expirationDate
+    ) {
       return res.status(400).json({
         message:
           "Promo code, discount amount, and expiration date are required.",
@@ -144,7 +210,8 @@ router.post("/promotions", async (req, res, next) => {
   } catch (error) {
     if (error.code === 11000) {
       return res.status(409).json({
-        message: "A promotion with this code already exists.",
+        message:
+          "A promotion with this code already exists.",
       });
     }
 
@@ -161,7 +228,9 @@ router.put("/promotions/:id", async (req, res, next) => {
     );
 
     if (!promotion) {
-      return res.status(404).json({ message: "Promotion not found." });
+      return res.status(404).json({
+        message: "Promotion not found.",
+      });
     }
 
     return res.json(promotion);
@@ -172,25 +241,33 @@ router.put("/promotions/:id", async (req, res, next) => {
 
 router.delete("/promotions/:id", async (req, res, next) => {
   try {
-    const promotion = await Promotion.findByIdAndDelete(req.params.id);
+    const promotion = await Promotion.findByIdAndDelete(
+      req.params.id
+    );
 
     if (!promotion) {
-      return res.status(404).json({ message: "Promotion not found." });
+      return res.status(404).json({
+        message: "Promotion not found.",
+      });
     }
 
-    return res.json({ message: "Promotion deleted." });
+    return res.json({
+      message: "Promotion deleted.",
+    });
   } catch (error) {
     next(error);
   }
 });
 
 /* ---------------------------------------------------------------- */
-/* Users                                                              */
+/* Users                                                             */
 /* ---------------------------------------------------------------- */
 
 router.get("/users", async (req, res, next) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
+    const users = await User.find().sort({
+      createdAt: -1,
+    });
 
     return res.json(
       users.map((user) => ({
@@ -211,9 +288,14 @@ router.put("/users/:id/status", async (req, res, next) => {
   try {
     const { status } = req.body;
 
-    if (!["Active", "Inactive", "Suspended"].includes(status)) {
+    if (
+      !["Active", "Inactive", "Suspended"].includes(
+        status
+      )
+    ) {
       return res.status(400).json({
-        message: "Status must be Active, Inactive, or Suspended.",
+        message:
+          "Status must be Active, Inactive, or Suspended.",
       });
     }
 
@@ -224,7 +306,9 @@ router.put("/users/:id/status", async (req, res, next) => {
     );
 
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({
+        message: "User not found.",
+      });
     }
 
     return res.json({

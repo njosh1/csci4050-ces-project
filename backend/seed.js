@@ -2,11 +2,13 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const Movie = require("./models/movieModel");
 
-const hardcodedShowtimes = [
-  { time: "2:00 PM", date: "2025-07-01" },
-  { time: "5:00 PM", date: "2025-07-01" },
-  { time: "8:00 PM", date: "2025-07-01" },
-];
+function createShowtimes(date, showroom) {
+  return [
+     { time: "2:00 PM", date, showroom },
+     { time: "5:00 PM", date, showroom },
+     { time: "8:00 PM", date, showroom },
+  ];
+}
 
 const movies = [
   // ── Currently Running ────────────────────────────────────────────────────
@@ -23,7 +25,7 @@ const movies = [
     director: "Denis Villeneuve",
     cast: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
     duration: 166,
-    showtimes: hardcodedShowtimes,
+    showtimes: createShowtimes("2026-08-01", "Showroom 1"),
   },
   {
     title: "Oppenheimer",
@@ -38,7 +40,7 @@ const movies = [
     director: "Christopher Nolan",
     cast: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
     duration: 180,
-    showtimes: hardcodedShowtimes,
+    showtimes: createShowtimes("2026-08-01", "Showroom 2"),
   },
   {
     title: "The Wild Robot",
@@ -53,7 +55,7 @@ const movies = [
     director: "Chris Sanders",
     cast: ["Lupita Nyong'o", "Pedro Pascal", "Kit Connor"],
     duration: 102,
-    showtimes: hardcodedShowtimes,
+    showtimes: createShowtimes("2026-08-01", "Showroom 3"),
   },
   {
     title: "Gladiator II",
@@ -68,7 +70,7 @@ const movies = [
     director: "Ridley Scott",
     cast: ["Paul Mescal", "Pedro Pascal", "Denzel Washington"],
     duration: 148,
-    showtimes: hardcodedShowtimes,
+    showtimes: createShowtimes("2026-08-02", "Showroom 1"),
   },
   {
     title: "Inside Out 2",
@@ -83,7 +85,7 @@ const movies = [
     director: "Kelsey Mann",
     cast: ["Amy Poehler", "Maya Hawke", "Kensington Tallman"],
     duration: 100,
-    showtimes: hardcodedShowtimes,
+    showtimes: createShowtimes("2026-08-02", "Showroom 2"),
   },
   {
     title: "Deadpool & Wolverine",
@@ -98,7 +100,7 @@ const movies = [
     director: "Shawn Levy",
     cast: ["Ryan Reynolds", "Hugh Jackman", "Emma Corrin"],
     duration: 128,
-    showtimes: hardcodedShowtimes,
+    showtimes: createShowtimes("2026-08-02", "Showroom 3"),
   },
   {
     title: "Alien: Romulus",
@@ -113,7 +115,7 @@ const movies = [
     director: "Fede Álvarez",
     cast: ["Cailee Spaeny", "David Jonsson", "Archie Renaux"],
     duration: 119,
-    showtimes: hardcodedShowtimes,
+    showtimes: createShowtimes("2026-08-03", "Showroom 1"),
   },
   // ── Coming Soon ──────────────────────────────────────────────────────────
   {
