@@ -101,7 +101,7 @@ function FavoriteButton({ movieId }: { movieId: string }) {
           : "Log in to save favorites"
       }
       aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-      className="ml-3 inline-flex items-center justify-center rounded-full border border-gray-300 p-2 transition hover:bg-gray-100 disabled:opacity-50"
+      className="ml-3 inline-flex items-center justify-center rounded-full border border-white/10 p-2 transition hover:bg-slate-800 disabled:opacity-50"
     >
       <svg
         aria-hidden="true"
@@ -139,13 +139,19 @@ export default function MovieDetailsPage() {
   }, [id]);
 
   if (!movie) {
-    return <main className="p-8 text-black">Loading...</main>;
-  }
-
   return (
-    <main className="min-h-screen bg-gray-100 p-8 text-black">
-      <section className="mx-auto max-w-5xl rounded bg-white p-8 shadow">
-        <Link href="/" className="mb-6 inline-block text-blue-600">
+    <main className="min-h-screen bg-[#090d16] p-8 text-white">
+      Loading...
+    </main>
+  );
+}
+  return (
+  <main className="min-h-screen bg-[#090d16] p-8 text-white">
+  <section className="mx-auto max-w-5xl rounded-2xl border border-white/10 bg-slate-900/75 p-8 shadow-xl backdrop-blur">
+        <Link
+  href="/"
+  className="mb-6 inline-block text-sky-400 hover:text-sky-300"
+>
           ← Back Home
         </Link>
 
@@ -180,14 +186,14 @@ export default function MovieDetailsPage() {
                   <Link
                     key={showtime._id}
                     href={`/booking?movieId=${movie._id}&showtimeId=${showtime._id}`}
-                    className="rounded bg-black px-4 py-2 text-white"
+                    className="rounded bg-sky-600 px-4 py-2 text-white transition hover:bg-sky-500"
                   >
                     {showtime.date} at {formatShowtime(showtime.time)} &middot; {showtime.showroom}
                   </Link>
                 ))}
               </div>
             ) : (
-              <p className="mt-3 text-gray-600">
+              <p className="mt-3 text-slate-400">
                 No showtimes yet. This movie is coming soon.
               </p>
             )}

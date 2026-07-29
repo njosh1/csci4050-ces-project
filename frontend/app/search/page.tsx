@@ -23,7 +23,7 @@ export default function SearchPage() {
     setSearched(true);
 
     const response = await fetch(
-      `http://localhost:5050/api/movies/search?q=${encodeURIComponent(query)}`
+      `http://localhost:5001/api/movies/search?q=${encodeURIComponent(query)}`
     );
 
     const data = await response.json();
@@ -33,18 +33,23 @@ export default function SearchPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-8 text-black">
-      <section className="mx-auto max-w-4xl rounded-lg bg-white p-8 shadow">
-        <Link href="/" className="mb-6 inline-block text-blue-600">
+    <main className="min-h-screen bg-[#090d16] p-8 text-white">
+      <section className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-slate-900/75 p-8 shadow-xl backdrop-blur">
+        <Link
+          href="/"
+          className="mb-6 inline-block text-sky-400 hover:text-sky-300"
+        >
           ← Back to Home
         </Link>
 
         <h1 className="mb-2 text-3xl font-bold">Search Movies</h1>
-        <p className="mb-6 text-gray-600">Search for movies by title.</p>
+        <p className="mb-6 text-slate-400">
+          Search for movies by title.
+        </p>
 
         <div className="mb-6 flex gap-2">
           <input
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-black"
+            className="w-full rounded border border-white/10 bg-slate-800 px-3 py-2 text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
             type="text"
             placeholder="Enter movie title..."
             value={query}
@@ -56,16 +61,16 @@ export default function SearchPage() {
 
           <button
             onClick={handleSearch}
-            className="rounded bg-black px-4 py-2 text-white"
+            className="rounded bg-sky-600 px-4 py-2 text-white transition hover:bg-sky-500"
           >
             Search
           </button>
         </div>
 
-        {loading && <p>Searching...</p>}
+        {loading && <p className="text-slate-400">Searching...</p>}
 
         {!loading && searched && movies.length === 0 && (
-          <p>No movies found.</p>
+          <p className="text-slate-400">No movies found.</p>
         )}
 
         <div className="grid gap-4">
@@ -73,23 +78,27 @@ export default function SearchPage() {
             <Link
               href={`/movies/${movie._id}`}
               key={movie._id}
-              className="flex gap-4 rounded border border-gray-300 p-4 hover:bg-gray-50"
+              className="flex gap-4 rounded-lg border border-white/10 bg-slate-800/50 p-4 transition hover:border-sky-500/40 hover:bg-slate-800"
             >
               <img
                 src={movie.posterUrl}
                 alt={movie.title}
-                 onError={(e) => {
-                    e.currentTarget.src =
-                      "https://placehold.co/500x750?text=Movie+Poster";
-           }}
+                onError={(e) => {
+                  e.currentTarget.src =
+                    "https://placehold.co/500x750?text=Movie+Poster";
+                }}
                 className="h-32 w-24 rounded object-cover"
               />
 
               <div>
                 <h2 className="text-xl font-semibold">{movie.title}</h2>
-                <p className="text-gray-600">{movie.genre.join(", ")}</p>
+                <p className="text-slate-400">
+                  {movie.genre.join(", ")}
+                </p>
                 <p className="text-sm">{movie.rating}</p>
-                <p className="text-sm text-blue-600">{movie.status}</p>
+                <p className="text-sm text-sky-400">
+                  {movie.status}
+                </p>
               </div>
             </Link>
           ))}
