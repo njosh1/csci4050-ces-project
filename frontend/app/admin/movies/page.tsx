@@ -60,7 +60,20 @@ function normalizeYoutubeUrl(rawUrl: string): string {
 }
 
 function isLikelyImageUrl(url: string): boolean {
-  return url.startsWith("/") || IMAGE_URL_PATTERN.test(url.split("?")[0]);
+  if (url.startsWith("/")) {
+    return IMAGE_URL_PATTERN.test(url.split("?")[0]);
+  }
+
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+
+  return IMAGE_URL_PATTERN.test(url.split("?")[0]);
 }
 
 export default function AdminMoviesPage() {
