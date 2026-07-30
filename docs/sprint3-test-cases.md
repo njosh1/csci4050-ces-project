@@ -1,9 +1,13 @@
-# Sprint 3 Test Cases
+# Sprint 3 / Final Demo Test Cases
 
 Manual test cases for the Admin Portal and Users' Portal features covered in
 this deliverable (Add Movie, Schedule Showtimes, Showtime Visibility, Start
-Booking, Seat Map, Seat Selection, Checkout). Run against a freshly seeded
-database (`npm run seed` in `backend/`).
+Booking, Seat Map, Seat Selection, Checkout, Payment, Order History). Run
+against a freshly seeded database (`npm run seed` in `backend/`, then
+`node seedAuthDemo.js` for the demo accounts used below).
+
+Demo accounts (password `Cinema!2026` for all): `customer.demo@ces.test` (no
+saved card), `cards.demo@ces.test` (3 saved cards), `admin.demo@ces.test`.
 
 ## Admin — Add Movie
 
@@ -50,8 +54,27 @@ database (`npm run seed` in `backend/`).
 | 19 | While signed out, pick tickets/seats and click "Proceed to Checkout". | Seats are reserved for the session, then the user is redirected to `/login` before seeing the order summary. |
 | 20 | Log in from that redirect. | User is returned to the booking page and lands directly on the Order Summary step with the same seats/tickets intact. |
 | 21 | Review the Order Summary step. | Movie name, showtime, selected seats, ticket breakdown, price per ticket, and total price before tax are all displayed. |
-| 22 | Confirm or edit the pre-filled email address, then continue. | Proceeds to the payment (mockup) step; a blank email is rejected first. |
-| 23 | View the payment step. | A mockup payment form is shown with a note that payment processing is not yet implemented. |
+| 22 | Confirm or edit the pre-filled email address, then continue. | Proceeds to the payment step; a blank email is rejected first. |
+
+## Users — Payment, Order Confirmation, Order History
+
+| # | Steps | Expected Result |
+|---|-------|------------------|
+| 23 | Log in as `cards.demo@ces.test` (has 3 saved cards), reach the payment step. | The saved cards are listed by cardholder name and last-4 digits with a radio to pick one, plus a "Use a new card" option. |
+| 24 | Select a saved card and click "Pay". | `POST /api/bookings/checkout` succeeds; the booking page moves to the Order Confirmed step showing movie, showtime, seats, ticket breakdown, total, and the card's last 4 digits. |
+| 25 | Check the backend console (or configured SMTP) after a successful payment. | An order confirmation email was sent/logged, listing the movie, showtime, each ticket type/quantity/price, the seats, and the total. |
+| 26 | Log in as `customer.demo@ces.test` (no saved cards), reach the payment step. | No saved-card list is shown; a card entry form (cardholder name, number, expiration, billing ZIP) is shown directly, with a "Save this card to my profile" checkbox. |
+| 27 | Enter a valid new card, check "Save this card", and pay. | Payment succeeds, order confirmation is shown, and the card now appears under Payment Cards on the Profile page for future checkouts. |
+| 28 | Enter a card number that isn't 13-19 digits, or an expired card, and try to pay. | Rejected with a 400 and a specific message (e.g. "Card number must be 13-19 digits.", "This card has already expired."); no reservation is confirmed. |
+| 29 | Call `POST /api/bookings/checkout` without an Authorization header. | Rejected with 401 — payment always requires the login gate already enforced earlier in checkout. |
+| 30 | After confirming an order, open the Profile page as that customer. | An "Order History" section lists the confirmed order with movie, showtime, seats, ticket breakdown, and total. A customer with no confirmed orders sees "You have no confirmed orders yet." |
+
+## System Design — Patterns to Demonstrate
+
+| Pattern | Where | What to show |
+|---|---|---|
+| Facade | `backend/services/bookingFacade.js` | `BookingFacade` gives the booking routes one interface (`getSeatMap`, `reserveSeats`, `completeCheckout`, `getOrderHistory`) that hides the Movie/Reservation/email coordination. |
+| Chain of Responsibility | `backend/middleware/requireUser.js` + `backend/middleware/requireAdmin.js` | `requireAdmin` delegates to `requireUser` before adding its own admin check — each link decides whether to short-circuit or pass the request on. |
 
 ## NFR Checks
 
