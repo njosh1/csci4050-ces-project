@@ -1,5 +1,11 @@
 const requireUser = require("./requireUser");
 
+/*
+ * requireAdmin is a link in the auth chain, not a standalone check:
+ * it delegates to requireUser first (verify JWT, load active account)
+ * and only adds the role check once that link succeeds, instead of
+ * re-implementing auth. requireUser -> requireAdmin -> route handler.
+ */
 function requireAdmin(req, res, next) {
   requireUser(req, res, (error) => {
     if (error) {

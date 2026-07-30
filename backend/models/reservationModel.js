@@ -42,6 +42,42 @@ const reservationSchema = new mongoose.Schema(
       enum: ["Reserved", "Confirmed"],
       default: "Reserved",
     },
+
+    /*
+     * Attached once the customer authenticates at checkout (login is
+     * gated before payment) — lets a confirmed order show up in that
+     * customer's order history.
+     */
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
+
+    /*
+     * Snapshot of pricing at confirmation time so order history stays
+     * accurate even if ticket prices change later.
+     */
+    pricePerTicket: {
+      type: ticketSchema,
+      default: undefined,
+    },
+
+    total: {
+      type: Number,
+      min: 0,
+    },
+
+    confirmedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

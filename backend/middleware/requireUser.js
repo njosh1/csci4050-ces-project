@@ -5,7 +5,8 @@ const { verifyUserToken } = require("../utils/jwt");
  * Resolves the requesting user's email from a real
  * "Authorization: Bearer <jwt>" header, issued by POST /api/auth/login.
  *
- * bypass — anyone could impersonate any user, including an admin, by setting a header. 
+ * This is the first link in the auth chain (see requireAdmin.js, which
+ * delegates here before adding its own role check).
  */
 
 function resolveEmail(req) {

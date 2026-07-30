@@ -218,9 +218,73 @@ Cinema E-Booking System`;
   };
 }
 
+/*
+ * Order confirmation email — sent once checkout completes. Lists
+ * every ticket (type, price) and its seats so the customer has a
+ * receipt.
+ */
+async function sendOrderConfirmationEmail(user, order) {
+  const transporter = createTransporter();
+
+  const subject = `Your Cinema E-Booking order is confirmed: ${order.movieTitle}`;
+
+  const ticketLines = order.tickets
+    .map(
+      (ticket) =>
+        `  ${ticket.type[0].toUpperCase()}${ticket.type.slice(1)} x${ticket.quantity} — $${ticket.unitPrice.toFixed(2)} each ($${ticket.subtotal.toFixed(2)})`
+    )
+    .join("\n");
+
+  const text = `Hello ${user.firstName},
+
+Your order is confirmed!
+
+Movie: ${order.movieTitle}
+Showtime: ${order.date} at ${order.time} (${order.showroom})
+Seats: ${order.seats.join(", ")}
+
+Tickets:
+${ticketLines}
+
+Total: $${order.total.toFixed(2)}
+Payment: card ending in ${order.cardLastFour}
+
+Thank you for booking with Cinema E-Booking.
+
+Cinema E-Booking System`;
+
+  if (!transporter) {
+    console.log("=======================================");
+    console.log("ORDER CONFIRMATION EMAIL PREVIEW");
+    console.log(`To: ${user.email}`);
+    console.log(`Subject: ${subject}`);
+    console.log(text);
+    console.log("=======================================");
+
+    return {
+      preview: true,
+    };
+  }
+
+  await transporter.sendMail({
+    from:
+      process.env.EMAIL_FROM ||
+      process.env.SMTP_USER,
+
+    to: user.email,
+    subject,
+    text,
+  });
+
+  return {
+    preview: false,
+  };
+}
+
 module.exports = {
   sendProfileChangedEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendPromotionEmail,
+  sendOrderConfirmationEmail,
 };

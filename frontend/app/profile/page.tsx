@@ -43,6 +43,25 @@ type FavoriteMovie = {
   rating: string;
 };
 
+type OrderTicket = {
+  type: "adult" | "child" | "senior";
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+};
+
+type Order = {
+  reservationId: string;
+  movieTitle: string;
+  date: string;
+  time: string;
+  showroom: string;
+  seats: string[];
+  tickets: OrderTicket[];
+  total: number;
+  confirmedAt: string;
+};
+
 const MAX_PAYMENT_CARDS = 3;
 
 async function apiFetch(path: string, options: RequestInit = {}) {
@@ -153,6 +172,8 @@ export default function ProfilePage() {
             )
           }
         />
+
+        <OrderHistorySection />
 
         <PasswordSection />
 
@@ -720,6 +741,79 @@ function PaymentCardsSection({
         >
           {atLimit ? "Card limit reached" : "Add Card"}
         </button>
+      )}
+    </SectionCard>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Order history
+// ---------------------------------------------------------------------------
+
+function OrderHistorySection() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const response = await fetch(`${API_URL}/api/bookings/mine`, {
+          headers: authHeaders(),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Unable to load order history.");
+        }
+
+        setOrders(data.orders || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unable to load order history.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
+
+  return (
+    <SectionCard title="Order History">
+      <Banner error={error} success="" />
+
+      {loading && <p className="text-sm text-gray-600">Loading orders...</p>}
+
+      {!loading && orders.length === 0 && !error && (
+        <p className="text-sm text-gray-600">You have no confirmed orders yet.</p>
+      )}
+
+      {orders.length > 0 && (
+        <ul className="space-y-3">
+          {orders.map((order) => (
+            <li key={order.reservationId} className="rounded border border-gray-200 p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <strong>{order.movieTitle}</strong>
+                <span className="text-gray-500">
+                  {new Date(order.confirmedAt).toLocaleDateString()}
+                </span>
+              </div>
+              <p className="mt-1 text-gray-600">
+                {order.date} &middot; {order.time} &middot; {order.showroom}
+              </p>
+              <p className="mt-1 text-gray-600">Seats: {order.seats.join(", ")}</p>
+              <p className="mt-1 text-gray-600">
+                {order.tickets
+                  .map(
+                    (t) =>
+                      `${t.type[0].toUpperCase()}${t.type.slice(1)} x${t.quantity}`
+                  )
+                  .join(", ")}
+              </p>
+              <p className="mt-1 font-medium">Total: ${order.total.toFixed(2)}</p>
+            </li>
+          ))}
+        </ul>
       )}
     </SectionCard>
   );

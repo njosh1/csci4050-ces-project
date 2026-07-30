@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 
-import { API_URL, getStoredUser, getToken } from "@/lib/auth";
+import { API_URL, authHeaders, getStoredUser, getToken } from "@/lib/auth";
 import { formatShowtime } from "@/lib/format";
 
 const ticketPrices = {
@@ -24,12 +24,40 @@ type SeatsResponse = {
   bookedSeats: string[];
 };
 
-type Step = "seats" | "summary" | "payment";
+type Step = "seats" | "summary" | "payment" | "confirmation";
 
 type PersistedBooking = {
   tickets: Tickets;
   seats: string[];
   step: Step;
+};
+
+type SavedCard = {
+  id: string;
+  cardholderName: string;
+  lastFourDigits: string;
+  expirationMonth: number;
+  expirationYear: number;
+};
+
+type OrderTicket = {
+  type: TicketType;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+};
+
+type Order = {
+  reservationId: string;
+  movieTitle: string;
+  date: string;
+  time: string;
+  showroom: string;
+  seats: string[];
+  tickets: OrderTicket[];
+  total: number;
+  cardLastFour: string;
+  confirmedAt: string;
 };
 
 const EMPTY_TICKETS: Tickets = { adult: 0, child: 0, senior: 0 };
@@ -111,6 +139,21 @@ function BookingPageContent() {
   const [reserving, setReserving] = useState(false);
   const [email, setEmail] = useState("");
 
+  const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
+  const [cardsLoaded, setCardsLoaded] = useState(false);
+  const [selectedCardId, setSelectedCardId] = useState<string>("");
+  const [useNewCard, setUseNewCard] = useState(false);
+  const [newCard, setNewCard] = useState({
+    cardholderName: "",
+    cardNumber: "",
+    expirationMonth: "",
+    expirationYear: "",
+    billingZip: "",
+  });
+  const [saveCard, setSaveCard] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [order, setOrder] = useState<Order | null>(null);
+
   useEffect(() => {
     if (!movieId || !showtimeId) {
       setLoadError("This booking link is missing a movie or showtime.");
@@ -162,6 +205,89 @@ function BookingPageContent() {
     loadSeats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [movieId, showtimeId]);
+
+  useEffect(() => {
+    if (step !== "payment" || cardsLoaded || !getToken()) {
+      return;
+    }
+
+    async function loadCards() {
+      try {
+        const response = await fetch(`${API_URL}/api/profile`, {
+          headers: authHeaders(),
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          const cards: SavedCard[] = data.paymentCards || [];
+          setSavedCards(cards);
+          setUseNewCard(cards.length === 0);
+          setSelectedCardId(cards[0]?.id || "");
+        }
+      } finally {
+        setCardsLoaded(true);
+      }
+    }
+
+    loadCards();
+  }, [step, cardsLoaded]);
+
+  async function handlePayment() {
+    setFormError("");
+
+    if (!useNewCard && !selectedCardId) {
+      setFormError("Choose a saved card or enter a new one.");
+      return;
+    }
+
+    setPaying(true);
+
+    try {
+      const sessionId = getOrCreateSessionId(movieId, showtimeId);
+
+      const body: Record<string, unknown> = {
+        movieId,
+        showtimeId,
+        sessionId,
+        email,
+      };
+
+      if (useNewCard) {
+        body.card = {
+          cardholderName: newCard.cardholderName,
+          cardNumber: newCard.cardNumber,
+          expirationMonth: Number(newCard.expirationMonth),
+          expirationYear: Number(newCard.expirationYear),
+          billingZip: newCard.billingZip,
+        };
+        body.saveCard = saveCard;
+      } else {
+        body.cardId = selectedCardId;
+      }
+
+      const response = await fetch(`${API_URL}/api/bookings/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to process payment.");
+      }
+
+      setOrder(data.order);
+      sessionStorage.removeItem(storageKey(movieId, showtimeId));
+      setStep("confirmation");
+    } catch (requestError) {
+      setFormError(
+        requestError instanceof Error ? requestError.message : "Unable to process payment."
+      );
+    } finally {
+      setPaying(false);
+    }
+  }
 
   const totalTickets = tickets.adult + tickets.child + tickets.senior;
 
@@ -574,28 +700,166 @@ function BookingPageContent() {
             </h3>
 
             <p className="tip-text">
-              Payment processing for this order will be available in the final
-              release. This screen is a preview of the checkout page.
+              Test mode — no real charge will be made.
             </p>
 
-            <div className="payment-mockup">
-              <label>Card Number</label>
-              <input type="text" placeholder="•••• •••• •••• ••••" disabled />
+            {savedCards.length > 0 && (
+              <div className="payment-mockup">
+                <label>Choose a payment card</label>
 
-              <div className="payment-mockup-row">
-                <div>
-                  <label>Expiration</label>
-                  <input type="text" placeholder="MM / YY" disabled />
+                {savedCards.map((card) => (
+                  <label key={card.id} className="payment-mockup-row" style={{ alignItems: "center" }}>
+                    <input
+                      type="radio"
+                      name="savedCard"
+                      checked={!useNewCard && selectedCardId === card.id}
+                      onChange={() => {
+                        setUseNewCard(false);
+                        setSelectedCardId(card.id);
+                      }}
+                    />
+                    <span>
+                      {card.cardholderName} &middot; &bull;&bull;&bull;&bull; {card.lastFourDigits} (exp{" "}
+                      {String(card.expirationMonth).padStart(2, "0")}/{card.expirationYear})
+                    </span>
+                  </label>
+                ))}
+
+                <label className="payment-mockup-row" style={{ alignItems: "center" }}>
+                  <input
+                    type="radio"
+                    name="savedCard"
+                    checked={useNewCard}
+                    onChange={() => setUseNewCard(true)}
+                  />
+                  <span>Use a new card</span>
+                </label>
+              </div>
+            )}
+
+            {useNewCard && (
+              <div className="payment-mockup">
+                <label>Cardholder Name</label>
+                <input
+                  type="text"
+                  value={newCard.cardholderName}
+                  onChange={(e) => setNewCard({ ...newCard, cardholderName: e.target.value })}
+                />
+
+                <label>Card Number</label>
+                <input
+                  type="text"
+                  placeholder="4111111111111111"
+                  value={newCard.cardNumber}
+                  onChange={(e) => setNewCard({ ...newCard, cardNumber: e.target.value })}
+                />
+
+                <div className="payment-mockup-row">
+                  <div>
+                    <label>Exp. Month</label>
+                    <input
+                      type="text"
+                      placeholder="MM"
+                      value={newCard.expirationMonth}
+                      onChange={(e) => setNewCard({ ...newCard, expirationMonth: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label>Exp. Year</label>
+                    <input
+                      type="text"
+                      placeholder="YYYY"
+                      value={newCard.expirationYear}
+                      onChange={(e) => setNewCard({ ...newCard, expirationYear: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label>Billing ZIP</label>
+                    <input
+                      type="text"
+                      placeholder="30601"
+                      value={newCard.billingZip}
+                      onChange={(e) => setNewCard({ ...newCard, billingZip: e.target.value })}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label>CVV</label>
-                  <input type="text" placeholder="•••" disabled />
-                </div>
+
+                <label className="payment-mockup-row" style={{ alignItems: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={saveCard}
+                    onChange={(e) => setSaveCard(e.target.checked)}
+                  />
+                  <span>Save this card to my profile</span>
+                </label>
+              </div>
+            )}
+
+            <button
+              type="button"
+              className="continue-button"
+              disabled={paying}
+              onClick={handlePayment}
+            >
+              {paying ? "Processing Payment..." : `Pay $${totalPrice.toFixed(2)}`}
+            </button>
+          </section>
+        )}
+
+        {step === "confirmation" && order && (
+          <section className="panel checkout-panel">
+            <h3 className="panel-title">
+              <span>&#10003;</span> Order Confirmed
+            </h3>
+
+            <p className="tip-text">
+              A confirmation email has been sent to {email}.
+            </p>
+
+            <div className="summary-card">
+              <h4>{order.movieTitle}</h4>
+              <div className="summary-row">
+                <span>Showtime</span>
+                <strong>
+                  {order.date} &middot; {formatShowtime(order.time)} &middot; {order.showroom}
+                </strong>
+              </div>
+              <div className="summary-row">
+                <span>Seats</span>
+                <strong className="seats-list">{order.seats.join(", ")}</strong>
               </div>
 
-              <button type="button" className="continue-button" disabled>
-                Payment Coming Soon
-              </button>
+              <div className="total-divider"></div>
+
+              {order.tickets.map((ticket) => (
+                <div className="summary-row" key={ticket.type}>
+                  <span>
+                    {ticket.type[0].toUpperCase() + ticket.type.slice(1)} &times; {ticket.quantity}
+                  </span>
+                  <strong>${ticket.subtotal.toFixed(2)}</strong>
+                </div>
+              ))}
+
+              <div className="total-divider"></div>
+
+              <div className="total-row">
+                <span>Total Paid</span>
+                <strong className="final-price">${order.total.toFixed(2)}</strong>
+              </div>
+
+              <div className="summary-row">
+                <span>Payment Method</span>
+                <strong>Card ending in {order.cardLastFour}</strong>
+              </div>
+            </div>
+
+            <div className="booking-footer">
+              <Link href="/profile" className="continue-button" style={{ textAlign: "center" }}>
+                View Order History
+              </Link>
+              <Link href="/" className="continue-button" style={{ textAlign: "center" }}>
+                Back to Home
+              </Link>
             </div>
           </section>
         )}
