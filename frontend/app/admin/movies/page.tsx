@@ -28,6 +28,41 @@ const EMPTY_FORM = {
   trailerUrl: "",
 };
 
+const IMAGE_URL_PATTERN = /\.(jpe?g|png|webp|gif|avif)$/i;
+
+// Rewrites any YouTube watch/share/short link into the embeddable
+// /embed/<id> form the movie details page's <iframe> requires.
+function normalizeYoutubeUrl(rawUrl: string): string {
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return rawUrl;
+  }
+
+  const host = url.hostname.replace(/^www\.|^m\./, "");
+  if (host !== "youtube.com" && host !== "youtu.be") {
+    return rawUrl;
+  }
+
+  let videoId = "";
+  if (host === "youtu.be") {
+    videoId = url.pathname.slice(1);
+  } else if (url.pathname === "/watch") {
+    videoId = url.searchParams.get("v") || "";
+  } else if (url.pathname.startsWith("/embed/")) {
+    return rawUrl;
+  } else if (url.pathname.startsWith("/live/") || url.pathname.startsWith("/shorts/")) {
+    videoId = url.pathname.split("/")[2] || "";
+  }
+
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : rawUrl;
+}
+
+function isLikelyImageUrl(url: string): boolean {
+  return url.startsWith("/") || IMAGE_URL_PATTERN.test(url.split("?")[0]);
+}
+
 export default function AdminMoviesPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +120,17 @@ export default function AdminMoviesPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+
+    const posterUrl = form.posterUrl.trim();
+    const trailerUrl = normalizeYoutubeUrl(form.trailerUrl.trim());
+
+    if (!isLikelyImageUrl(posterUrl)) {
+      setError(
+        "Poster URL must be a direct link to an image file (.jpg, .png, .webp, etc.), not a webpage."
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
@@ -96,8 +142,8 @@ export default function AdminMoviesPage() {
         .filter(Boolean),
       rating: form.rating,
       status: form.status,
-      posterUrl: form.posterUrl.trim(),
-      trailerUrl: form.trailerUrl.trim(),
+      posterUrl,
+      trailerUrl,
     };
 
     try {
